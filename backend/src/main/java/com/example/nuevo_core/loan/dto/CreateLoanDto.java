@@ -2,7 +2,15 @@ package com.example.nuevo_core.loan.dto;
 
 import com.example.nuevo_core.constants.loans.LoanInterestPeriod;
 
-public record CreateLoanDto(double amount,
-                            float interestRate,
+import java.math.BigDecimal;
+import java.util.List;
+
+public record CreateLoanDto(BigDecimal amount,
+                            BigDecimal interestRate,
                             int termInMonths,
-                            LoanInterestPeriod interestPeriodFrequency){}
+                            LoanInterestPeriod interestPeriodFrequency,
+                            List<String> relateds,
+                            String type,
+                            String currency) {
+
+}

@@ -1,26 +1,15 @@
-package com.example.nuevo_core.loan;
+package com.example.nuevo_core.amortizationTable;
 
 import lombok.Builder;
 import lombok.Data;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
-import java.util.List;
 import java.util.UUID;
 
 @Data
 @Builder
-public class AmortizationTable {
-    private long id;
-    private long loanId;
-    private List<AmortizationTableItem> item;
-
-
-}
-
-@Data
-@Builder
-class AmortizationTableItem {
+public class AmortizationTableItem {
     private UUID reference;
     private int paymentNumber;
     private BigDecimal cuota;
