@@ -1,4 +1,4 @@
-package com.example.nuevo_core.loan.dto;
+package com.example.nuevo_core.loan.dto.loan;
 
 import com.example.nuevo_core.constants.loans.LoanInterestPeriod;
 

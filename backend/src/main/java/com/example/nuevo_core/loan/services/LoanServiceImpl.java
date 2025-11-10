@@ -1,13 +1,23 @@
-package com.example.nuevo_core.loan;
+package com.example.nuevo_core.loan.services;
 
 
-import com.example.nuevo_core.amortizationTable.AmortizationTable;
-import com.example.nuevo_core.amortizationTable.AmortizationTableItem;
+import com.example.nuevo_core.loan.interfaces.ILoanPaymentService;
+import com.example.nuevo_core.loan.interfaces.ILoanService;
+import com.example.nuevo_core.loan.model.Loan;
+import com.example.nuevo_core.loanAmortization.amortizationTable.AmortizationTable;
+import com.example.nuevo_core.loanAmortization.amortizationTableItem.AmortizationTableItem;
+import com.example.nuevo_core.loanAmortization.amortizationTable.IAmortizationService;
 import com.example.nuevo_core.constants.loans.LoanInterestPeriod;
-import com.example.nuevo_core.constants.loans.PaymentStatus;
-import com.example.nuevo_core.loan.dto.CreateLoanDto;
+import com.example.nuevo_core.constants.loans.PaymentFrequency;
+import com.example.nuevo_core.loan.constants.LoanStatus;
+import com.example.nuevo_core.loan.dto.loan.AdminLoanDto;
+import com.example.nuevo_core.loan.dto.loan.CreateLoanDto;
+import com.example.nuevo_core.loan.dto.loan.DeleteLoanDto;
+import com.example.nuevo_core.loan.exceptions.loanIsDeletedException;
 import com.example.nuevo_core.loan.repository.LoanRepository;
-import org.hibernate.annotations.NotFound;
+import jakarta.transaction.Transactional;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -17,24 +27,33 @@ import java.math.RoundingMode;
 import java.text.NumberFormat;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.*;
 
 @Service
 public class LoanServiceImpl implements ILoanService {
+
+    private static final Logger log = LoggerFactory.getLogger(LoanServiceImpl.class);
     private final int YEAR_BASE_DAYS = 360;
     private final int MONTH_BASE_DAYS = 30;
-    private final LocalDateTime now = LocalDateTime.now();
+    private final float LATE_FEE_RATE = 6 / 100;
 
+
+    private final IAmortizationService _amortizationService;
+
+    private final LocalDateTime now = LocalDateTime.now();
 
     @Autowired
     private LoanRepository loanRepository;
 
-    public LoanServiceImpl() {
+    public LoanServiceImpl(IAmortizationService amortizationService) {
+
+        _amortizationService = amortizationService;
     }
 
     public Loan getLoanById(Long id) {
-        Loan loan = loanRepository.findById(id).orElseThrow();
+        Loan loan = loanRepository.findById(id)
+                .orElseThrow();
+        loan.setAmortizationTable(_amortizationService.getAmortizationTableByLoanId(loan.getId()));
 
         BigDecimal roundedInterestRate = loan.getInterestRate()
                 .multiply(BigDecimal.valueOf(100))
@@ -45,6 +64,7 @@ public class LoanServiceImpl implements ILoanService {
         return loan;
     }
 
+    @Transactional
     public Loan createLoan(CreateLoanDto loanDto) {
 
         BigDecimal disbursementAmount = loanDto.amount()
@@ -54,61 +74,88 @@ public class LoanServiceImpl implements ILoanService {
                 .setScale(2, RoundingMode.HALF_UP);
 
         BigDecimal interestRate = loanDto.interestRate()
-                .divide(BigDecimal.valueOf(100), 10, RoundingMode.HALF_UP);
+                .divide(BigDecimal.valueOf(100), 10, RoundingMode.UNNECESSARY);
 
         int interestPeriodInMonths = getInterestPeriodFrequencyInNumber(loanDto.interestPeriodFrequency());//12
 
         BigDecimal cuota = calculateCuota(amount, interestRate, loanDto.termInMonths())
                 .setScale(2, RoundingMode.HALF_UP);
 
-        BigDecimal projectedInterest = calculateProjectedInterest(loanDto.amount(), interestRate, loanDto.termInMonths(), loanDto.interestPeriodFrequency());
+        BigDecimal projectedInterest =
+                calculateProjectedInterest(loanDto.amount(), interestRate, loanDto.termInMonths(), loanDto.interestPeriodFrequency());
 
         BigDecimal dailyInterestFactor =
                 calculateDailyInterestFactor(amount, interestRate, loanDto.termInMonths())
                         .setScale(2, RoundingMode.HALF_UP);
+
+        LocalDate loanDueDate = now.toLocalDate()
+                .plusMonths(loanDto.termInMonths());
+
         Loan loan = Loan.builder()
-                .status(PaymentStatus.NORMAL.toString())
+                .status(LoanStatus.APPROVED)
                 .type(loanDto.type())
-                .disbursementAmount(disbursementAmount)
-                .montoCuota(cuota)
-                .dailyInterestFactor(dailyInterestFactor)
+                .currency(loanDto.currency())//In future can validate by loan type
+                .principalAmount(disbursementAmount)
+                .availableAmountForDisbursement(BigDecimal.ZERO)
+                .outstandingPrincipalAmount(disbursementAmount)
+                .interestBalance(BigDecimal.ZERO)
                 .interestRate(interestRate)
+                .termInMonths(loanDto.termInMonths())
+                .paymentFrequency(PaymentFrequency.MONTHLY)
+                .dailyInterestFactor(dailyInterestFactor)
+                .installmentAmount(cuota)
+                .lateFeeRate(new BigDecimal(LATE_FEE_RATE))
+                .lateFeeBalance(new BigDecimal(0))
+                .totalInstallmentBalance(cuota)
+                .totalPaidInterest(BigDecimal.ZERO)
                 .projectedInterest(projectedInterest.setScale(2, RoundingMode.HALF_UP))
-                .term(loanDto.termInMonths())
                 .oneCycleTimes(0)
                 .twoCycleTimes(0)
-                .capitalBalance(disbursementAmount)
-                .totalPaidInterest(BigDecimal.ZERO)
-                .disbursementDate(null)
+                .paymentsMade(0)
+                .paymentsPending(0)
+                .firstPaymentDate(null)
                 .nextPaymentDate(null)
+                .lastPaymentDate(null)
+                .lastInterestBalanceUpdateDate(null)
+                .disbursementDate(null)
+                .lastInterestRateReviewDate(now)
+                .dueDate(loanDueDate)
                 .createdAt(now)
-                .interestBalance(BigDecimal.ZERO)
-                .relateds(loanDto.relateds())
-                .availableForDisbursement(BigDecimal.ZERO)
+                .updatedAt(null)
+                .linkedAccount(null)
+                .canAutoDebit(false)
                 .isLineOfCredit(false)
-                .currency(loanDto.currency())//In future can validate by loan type
+                .isDeleted(false)
+                .relateds(loanDto.relateds())
                 .build();
+
 
         loanRepository.save(loan);
 
-        AmortizationTable amortizationTable =
-                generateAmortizationTable(loan.getId(), loanDto.amount(), interestRate, loanDto.termInMonths(), 12);
+        //todo: if is line of credit, set available amount for disbursement, after check if revol is active
+
+        AmortizationTable amortizationTable = _amortizationService.generateAmortizationTable(
+                loan.getId(),
+                cuota,
+                loanDto.amount(),
+                interestRate,
+                loanDto.termInMonths(), 12);
+
         loan.setAmortizationTable(amortizationTable);
 
+        log.info("loan created: loanId={}", loan.getId());
         return loan;
 
     }
 
     public void deleteLoanById(Long loanId) {
-        Loan loan = loanRepository.findByIdAndIsDeletedFalse(loanId)
-                .orElseThrow(() -> new RuntimeException("Loan not found or deleted"));
+        DeleteLoanDto loan = loanRepository.getLoanToDelete(loanId);
 
-        loan.setIsDeleted(true);
-        loanRepository.save(loan);
-
-        System.out.println(loan.getId());
-        System.out.println(loan.getIsDeleted());
-
+        if (loan.getIsDeleted()) {
+            throw new loanIsDeletedException("Loan is already deleted");
+        } else {
+            loanRepository.markLoanAsDeleted(loanId);
+        }
     }
 
     public BigDecimal calculateCuota(BigDecimal capital,
@@ -134,67 +181,6 @@ public class LoanServiceImpl implements ILoanService {
 
         return cuota.setScale(2, RoundingMode.HALF_UP);
 
-
-    }
-
-    public AmortizationTable generateAmortizationTable(Long loanId,
-                                                       BigDecimal capital,
-                                                       BigDecimal interestRate,
-                                                       int term,
-                                                       int interestPeriodInMonths) {
-
-
-        //FIRST CHECK IF LOAN ALREADY HAS AN AMORTIZATION TABLE
-        BigDecimal cuota = calculateCuota(capital, interestRate, term);
-
-        //todo: Initial date is when the loan is disbursed and already have a paymentDate
-        LocalDate initialDate = LocalDate.of(2025, 10, 20);
-
-        List<AmortizationTableItem> payments = new ArrayList<AmortizationTableItem>();
-
-        BigDecimal balance = capital;
-
-        for (int mes = 1; mes <= term; mes++) {
-            BigDecimal interes = balance
-                    .multiply(interestRate)
-                    .divide(new BigDecimal(12), 2, RoundingMode.HALF_UP);
-
-
-            BigDecimal capitalPagado = cuota
-                    .subtract(interes);
-
-            balance = balance.subtract(capitalPagado);
-
-            initialDate = initialDate.plusMonths(1);
-
-            DateTimeFormatter formato = DateTimeFormatter.ofPattern("dd/MM/yyyy");
-
-            /*System.out.printf("%-5d fecha: %s  cuota:%-10.2f int:%-10.2f capita:%-10.2f saldo:%-10.2f%n",
-                    mes, formato.format(initialDate), cuota, interes, capitalPagado, balance);*/
-
-            AmortizationTableItem item = AmortizationTableItem.builder()
-                    .reference(UUID.randomUUID())
-                    .cuota(cuota)
-                    .capital(capitalPagado)
-                    .interes(interes)
-                    .saldo(balance)
-                    .paymentNumber(mes)
-                    .isPaid(false)
-                    .paidDate(null)
-                    .paymentDate(initialDate)
-                    .build();
-
-            payments.add(item);
-        }
-
-        AmortizationTable table = AmortizationTable.builder()
-                .id(3995395)
-                .loanId(loanId != null ? loanId : 0)
-                .item(payments)
-                .build();
-
-
-        return table;
 
     }
 
@@ -278,11 +264,14 @@ public class LoanServiceImpl implements ILoanService {
     public void calculateMora() {
     }
 
-    public void sumDailyFactorToInterestBalance(long id) {
-        Loan loan = getLoanById(id);
-        BigDecimal interestBalance = loan.getInterestBalance();
-        BigDecimal dailyInterestFactor = loan.getDailyInterestFactor();
 
-        loan.setInterestBalance(interestBalance.add(dailyInterestFactor));
+
+    public AdminLoanDto getLoanDetailsToAdmin(Long loanId) {
+        return loanRepository.getLoanDetailsToAdmin(loanId);
     }
+
+    public void RecalculateCuota() {
+    }
+
+    ;
 }
