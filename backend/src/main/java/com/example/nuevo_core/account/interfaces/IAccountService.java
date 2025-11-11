@@ -7,8 +7,8 @@ import java.util.List;
 
 public interface IAccountService {
     void createAccount();
-    Account getAccountById();
+    Account getAccountById(Long accountNumber);
     List<Account> getAccountsByCustomerId();
-    BigDecimal getAccountBalanceByAccountId(Long accountId);
+    BigDecimal checkBalanceByAccountId(Long accountId);
     BigDecimal withdrawAmountFromAccount(Long accountId,BigDecimal amount,String description);
 }

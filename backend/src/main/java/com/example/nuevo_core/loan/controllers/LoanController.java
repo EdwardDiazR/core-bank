@@ -90,5 +90,4 @@ public class LoanController {
         return ResponseEntity.ok(loan.getAmortizationTable());
     }
 
-
 }

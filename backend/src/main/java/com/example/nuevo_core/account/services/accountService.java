@@ -17,7 +17,7 @@ public class accountService implements IAccountService {
     public void createAccount() {
     }
 
-    public Account getAccountById() {
+    public Account getAccountById(Long accountNumber) {
         return new Account();
     }
 
@@ -25,7 +25,7 @@ public class accountService implements IAccountService {
         return new ArrayList<>();
     }
 
-    public BigDecimal getAccountBalanceByAccountId(Long accountId) {
+    public BigDecimal checkBalanceByAccountId(Long accountId) {
         return BigDecimal.ZERO;
     }
 

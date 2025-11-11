@@ -128,7 +128,7 @@ public class LoanPaymentService implements ILoanPaymentService {
         BigDecimal totalDue = calculateTotalDue(dueInstallments, dueCharges);
 
         //Get account number, balance, and others
-        BigDecimal accountBalance = _accountService.getAccountBalanceByAccountId(loan.getLinkedAccount()); //todo:debit amount from account
+        BigDecimal accountBalance = _accountService.checkBalanceByAccountId(loan.getLinkedAccount()); //todo:debit amount from account
         BigDecimal amountToDebit = accountBalance.min(totalDue);
 
         if (accountBalance.compareTo(BigDecimal.ZERO) <= 0) {
