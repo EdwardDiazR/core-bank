@@ -1,6 +1,6 @@
 package com.example.nuevo_core.loan.controllers;
 
-import com.example.nuevo_core.loan.model.LoanPayment;
+import com.example.nuevo_core.loan.entity.LoanPayment;
 import com.example.nuevo_core.loan.interfaces.ILoanPaymentService;
 import com.example.nuevo_core.loan.dto.loanPayment.PayLoanDto;
 import jakarta.websocket.server.PathParam;

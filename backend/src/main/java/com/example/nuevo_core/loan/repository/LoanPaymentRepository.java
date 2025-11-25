@@ -1,8 +1,7 @@
 package com.example.nuevo_core.loan.repository;
 
-import com.example.nuevo_core.loan.model.Loan;
 import com.example.nuevo_core.loanAmortization.amortizationTableItem.AmortizationTableItem;
-import com.example.nuevo_core.loan.model.LoanPayment;
+import com.example.nuevo_core.loan.entity.LoanPayment;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;

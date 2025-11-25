@@ -3,12 +3,14 @@ package com.example.nuevo_core.loan.interfaces;
 import com.example.nuevo_core.constants.loans.LoanInterestPeriod;
 import com.example.nuevo_core.loan.dto.loan.AdminLoanDto;
 import com.example.nuevo_core.loan.dto.loan.CreateLoanDto;
-import com.example.nuevo_core.loan.model.Loan;
+import com.example.nuevo_core.loan.dto.loan.LoanDto;
+import com.example.nuevo_core.loan.entity.Loan;
 
 import java.math.BigDecimal;
+import java.util.Optional;
 
 public interface ILoanService {
-    Loan getLoanById(Long id);
+    LoanDto getLoanByProductNumber(String number);
 
     AdminLoanDto getLoanDetailsToAdmin(Long loanId);
 

@@ -1,6 +1,6 @@
 package com.example.nuevo_core.loan.repository;
 
-import com.example.nuevo_core.loan.model.Loan;
+import com.example.nuevo_core.loan.entity.Loan;
 import com.example.nuevo_core.loan.dto.loan.AdminLoanDto;
 import com.example.nuevo_core.loan.dto.loan.DeleteLoanDto;
 import jakarta.transaction.Transactional;
@@ -10,6 +10,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import java.util.List;
+import java.util.Optional;
 
 
 public interface LoanRepository extends JpaRepository<Loan, Long> {
@@ -45,5 +46,6 @@ public interface LoanRepository extends JpaRepository<Loan, Long> {
             """)
     List<Loan> getLoansByStatusNormal();
 
+    Optional<Loan> findByProductNumber(String loanNumber);
     //String getLoanRelateds(@Param("id") Long loanId);
 }

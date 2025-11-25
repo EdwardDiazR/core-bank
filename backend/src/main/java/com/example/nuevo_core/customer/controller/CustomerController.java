@@ -4,7 +4,6 @@ import com.example.nuevo_core.customer.model.Customer;
 import com.example.nuevo_core.customer.dto.CustomerGeneralView;
 import com.example.nuevo_core.customer.dto.FinancialAccounts;
 import com.example.nuevo_core.customer.dto.GetCustomerByNationalIdDto;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 

@@ -1,9 +1,8 @@
 package com.example.nuevo_core.loan.services;
 
 import com.example.nuevo_core.loan.interfaces.ILoanPaymentService;
-import com.example.nuevo_core.loan.model.Loan;
-import com.example.nuevo_core.loan.model.LoanCharge;
-import com.example.nuevo_core.loan.model.LoanPayment;
+import com.example.nuevo_core.loan.entity.LoanCharge;
+import com.example.nuevo_core.loan.entity.LoanPayment;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;

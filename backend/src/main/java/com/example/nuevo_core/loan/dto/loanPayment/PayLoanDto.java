@@ -1,6 +1,6 @@
 package com.example.nuevo_core.loan.dto.loanPayment;
 
-import com.example.nuevo_core.loan.model.Loan;
+import com.example.nuevo_core.loan.entity.Loan;
 
 import java.math.BigDecimal;
 

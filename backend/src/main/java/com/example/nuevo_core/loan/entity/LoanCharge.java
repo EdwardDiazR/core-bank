@@ -1,4 +1,4 @@
-package com.example.nuevo_core.loan.model;
+package com.example.nuevo_core.loan.entity;
 
 import com.example.nuevo_core.loan.constants.LoanChargeType;
 import com.example.nuevo_core.utils.BooleanToNumberConverter;

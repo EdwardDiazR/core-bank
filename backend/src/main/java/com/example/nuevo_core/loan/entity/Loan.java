@@ -1,5 +1,6 @@
-package com.example.nuevo_core.loan.model;
+package com.example.nuevo_core.loan.entity;
 
+import com.example.nuevo_core.financialProduct.entity.FinancialProduct;
 import com.example.nuevo_core.loanAmortization.amortizationTable.AmortizationTable;
 import com.example.nuevo_core.constants.loans.PaymentFrequency;
 import com.example.nuevo_core.loan.constants.LoanStatus;
@@ -7,34 +8,25 @@ import com.example.nuevo_core.utils.BooleanToNumberConverter;
 import jakarta.annotation.Nonnull;
 import jakarta.annotation.Nullable;
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
+import lombok.experimental.SuperBuilder;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.List;
 
-
+@SuperBuilder
 @Entity
 @Table(name = "loan")
 @Data
-@Builder
 @AllArgsConstructor
 @NoArgsConstructor
-@SequenceGenerator(
-        name = "global_seq",
-        sequenceName = "global_seq",
-        allocationSize = 1
-)
-public class Loan {
+@EqualsAndHashCode(callSuper = true)
+public class Loan extends FinancialProduct {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "global_seq")
     @Column(name = "id")
-    private Long id = null;
+    private Long id;
 
     @Column(name = "status")
     @Enumerated(EnumType.STRING)
@@ -58,7 +50,7 @@ public class Loan {
     @Column(name = "interest_balance")
     private BigDecimal interestBalance;
 
-    @Column(name = "interest_rate", precision = 7,scale = 5)
+    @Column(name = "interest_rate", precision = 7, scale = 5)
     private BigDecimal interestRate;
 
     @Column(name = "term_in_months")
@@ -129,10 +121,6 @@ public class Loan {
     @Nullable
     private LocalDate dueDate;
 
-    @Column(name = "created_at")
-    @Nonnull
-    private LocalDateTime createdAt;
-
     @Column(name = "updated_at")
     @Nullable
     private LocalDateTime updatedAt;
@@ -155,10 +143,6 @@ public class Loan {
     @Convert(converter = BooleanToNumberConverter.class)
     @Column(name = "is_deleted")
     private Boolean isDeleted;
-
-    @Nullable
-    @Transient
-    private List<String> relateds;
 
     @Nullable
     @Transient

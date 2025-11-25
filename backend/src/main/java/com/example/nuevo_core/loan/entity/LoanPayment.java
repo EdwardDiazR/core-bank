@@ -1,4 +1,4 @@
-package com.example.nuevo_core.loan.model;
+package com.example.nuevo_core.loan.entity;
 
 import com.example.nuevo_core.loanAmortization.amortizationTableItem.AmortizationTableItem;
 import com.example.nuevo_core.loan.constants.PaymentStatus;

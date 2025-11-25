@@ -1,8 +1,9 @@
 package com.example.nuevo_core.loan.controllers;
 
 
+import com.example.nuevo_core.loan.dto.loan.LoanDto;
 import com.example.nuevo_core.loan.interfaces.ILoanService;
-import com.example.nuevo_core.loan.model.Loan;
+import com.example.nuevo_core.loan.entity.Loan;
 import com.example.nuevo_core.loanAmortization.amortizationTable.AmortizationTable;
 import com.example.nuevo_core.loan.dto.loan.CreateLoanDto;
 import com.example.nuevo_core.loan.repository.LoanRepository;
@@ -31,8 +32,8 @@ public class LoanController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Loan> getLoanById(@PathVariable("id") Long id) {
-        Loan loan = _loanService.getLoanById(id);
+    public ResponseEntity<LoanDto> getLoanById(@PathVariable("id") String id) {
+        LoanDto loan = _loanService.getLoanByProductNumber(id);
 
         try {
             return ResponseEntity.ok(loan);
@@ -82,12 +83,12 @@ public class LoanController {
         }
     }
 
-    @GetMapping("/amortization-table")
-    public ResponseEntity<AmortizationTable> getAmortizationTable(@RequestParam Long loanId) {
+   /* @GetMapping("/amortization-table")
+    public ResponseEntity<AmortizationTable> getAmortizationTable(@RequestParam String loanNumber) {
 
-        Loan loan = _loanService.getLoanById(loanId);
+        var loan = _loanService.getLoanByProductNumber(loanNumber);
 
-        return ResponseEntity.ok(loan.getAmortizationTable());
-    }
+        return ResponseEntity.ok(loan.amortizationTable());
+    }*/
 
 }

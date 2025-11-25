@@ -1,6 +1,6 @@
 package com.example.nuevo_core.loan.interfaces;
 
-import com.example.nuevo_core.loan.model.Loan;
+import com.example.nuevo_core.loan.entity.Loan;
 
 public interface ILoanInterestService {
     void processLoanInterestAccrualBatch();

@@ -1,8 +1,7 @@
 package com.example.nuevo_core.account.controller;
 
 import com.example.nuevo_core.account.interfaces.IAccountService;
-import com.example.nuevo_core.account.model.Account;
-import jakarta.validation.Valid;
+import com.example.nuevo_core.account.entity.Account;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 

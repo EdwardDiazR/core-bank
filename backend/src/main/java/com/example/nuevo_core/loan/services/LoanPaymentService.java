@@ -1,12 +1,12 @@
 package com.example.nuevo_core.loan.services;
 
-import com.example.nuevo_core.loan.model.LoanCharge;
+import com.example.nuevo_core.loan.entity.LoanCharge;
 import com.example.nuevo_core.account.interfaces.IAccountService;
-import com.example.nuevo_core.loan.model.LoanPayment;
+import com.example.nuevo_core.loan.entity.LoanPayment;
 import com.example.nuevo_core.loanAmortization.amortizationTable.IAmortizationService;
 import com.example.nuevo_core.loanAmortization.amortizationTableItem.AmortizationTableItem;
 import com.example.nuevo_core.loan.interfaces.ILoanService;
-import com.example.nuevo_core.loan.model.Loan;
+import com.example.nuevo_core.loan.entity.Loan;
 import com.example.nuevo_core.loan.repository.LoanRepository;
 import com.example.nuevo_core.loanAmortization.amortizationTableItem.IAmortizationTableItemRepository;
 import com.example.nuevo_core.loan.interfaces.ILoanPaymentService;
@@ -29,7 +29,6 @@ import java.util.List;
 @Slf4j
 @Service
 public class LoanPaymentService implements ILoanPaymentService {
-    private final LocalDateTime now = LocalDateTime.now();
 
     private final ILoanService _loanService;
     private final IAmortizationService _amortizationService;
@@ -106,6 +105,8 @@ public class LoanPaymentService implements ILoanPaymentService {
     }
 
     public List<Long> getAllDueInstallmentsToAutopay() {
+         LocalDateTime now = LocalDateTime.now();
+
         return _loanPaymentRepository.findLoansWithDueInstallmentsToAutopay(now.toLocalDate());
     }
 
@@ -137,7 +138,7 @@ public class LoanPaymentService implements ILoanPaymentService {
 
         String transactionDescription = "Autopago Prestamo " + loan.getId();
 
-        BigDecimal remainingBalance = _accountService.withdrawAmountFromAccount(
+        BigDecimal remainingBalance = _accountService.withdraw(
                 loan.getLinkedAccount(),
                 amountToDebit,
                 transactionDescription);
@@ -151,7 +152,7 @@ public class LoanPaymentService implements ILoanPaymentService {
                                Loan loan,
                                BigDecimal amountToPay,
                                String paymentSource) {
-
+        LocalDateTime now = LocalDateTime.now();
         BigDecimal remainingBalance = amountToPay;
 
         if (!charges.isEmpty()) {

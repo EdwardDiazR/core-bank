@@ -1,6 +1,7 @@
-package com.example.nuevo_core.account.model;
+package com.example.nuevo_core.account.entity;
 
 import com.example.nuevo_core.account.constants.AccountStatus;
+import com.example.nuevo_core.financialProduct.entity.FinancialProductRelative;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -15,15 +16,18 @@ import java.util.List;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-@SequenceGenerator(name = "global_seq",sequenceName = "global_seq")
+@SequenceGenerator(name = "global_seq", sequenceName = "global_seq")
+@Inheritance(strategy = InheritanceType.JOINED)
 public class Account {
     @Id
-    @GeneratedValue(strategy = GenerationType.SEQUENCE,generator = "global_seq")
+    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "global_seq")
     @Column(name = "id")
     private Long id;
 
     @Enumerated(EnumType.STRING)
     private AccountStatus status;
+
+    private String customerId;
 
     private String currency;
     private BigDecimal totalBalance;
@@ -36,5 +40,10 @@ public class Account {
     private LocalDateTime lastActivityDate;
 
     private Boolean hasFirstDeposit;
-    private List<AccountRelative> relatives;
+
+    private List<FinancialProductRelative> relatives;
+
+    private boolean canTransfer;
+    private boolean canWithdraw;
+    private boolean canDeposit;
 }

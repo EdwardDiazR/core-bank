@@ -1,7 +1,7 @@
 package com.example.nuevo_core.loanAmortization.amortizationTable;
 
 import com.example.nuevo_core.loanAmortization.amortizationTableItem.AmortizationTableItem;
-import com.example.nuevo_core.loan.model.LoanPayment;
+import com.example.nuevo_core.loan.entity.LoanPayment;
 import com.example.nuevo_core.utils.BooleanToNumberConverter;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.annotation.Nullable;

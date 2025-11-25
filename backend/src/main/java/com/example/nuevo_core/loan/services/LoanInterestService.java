@@ -2,7 +2,7 @@ package com.example.nuevo_core.loan.services;
 
 import com.example.nuevo_core.loan.interfaces.ILoanInterestService;
 import com.example.nuevo_core.loan.interfaces.ILoanService;
-import com.example.nuevo_core.loan.model.Loan;
+import com.example.nuevo_core.loan.entity.Loan;
 import com.example.nuevo_core.loan.repository.LoanRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;

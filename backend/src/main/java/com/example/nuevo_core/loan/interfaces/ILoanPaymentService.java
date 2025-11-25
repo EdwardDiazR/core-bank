@@ -1,6 +1,6 @@
 package com.example.nuevo_core.loan.interfaces;
 
-import com.example.nuevo_core.loan.model.LoanPayment;
+import com.example.nuevo_core.loan.entity.LoanPayment;
 import com.example.nuevo_core.loan.dto.loanPayment.PayLoanDto;
 
 import java.time.LocalDate;
