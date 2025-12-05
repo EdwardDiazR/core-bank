@@ -1,0 +1,66 @@
+.container {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  background-color: white;
+  padding: 20px 10px;
+  color: black;
+}
+
+.card {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: 90%;
+  align-self: center;
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2), /* sombra principal más fuerte */ 0 4px 6px rgba(0, 0, 0, 0.15); /* sombra secundaria suave */
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  border-radius: 5px;
+  overflow: hidden;
+}
+
+
+
+.header {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+  background-color: #003b7a;
+  padding: 5px 10px;
+  height: 50px;
+
+  h3 {
+    color: white;
+    font-weight: 600;
+  }
+  button {
+    background-color: #ed8b00;
+    border-radius: 5px;
+    padding: 2px 10px;
+    cursor: pointer;
+    color: white;
+  }
+}
+.loanInfoGrid {
+  display: grid;
+  grid-template-columns: repeat(4,1fr); /* 4 columnas iguales */
+  grid-template-rows: repeat(auto,auto);  /* 5 filas fijas de 120px */
+  gap: 20px;  
+  padding: 5px 20px 15px 20px;
+  overflow: scroll;
+}
+.infoItem {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  width:250px ;
+
+  input {
+    background-color: rgb(233, 233, 233);
+    border-radius: 5px;
+    padding: 2px 5px;
+    border: 1.57px solid gray;
+    height: 35px;
+  }
+}
