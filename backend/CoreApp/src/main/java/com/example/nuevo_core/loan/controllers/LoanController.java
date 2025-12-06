@@ -37,15 +37,15 @@ public class LoanController {
         _loanPaymentService = loanPaymentService;
     }
 
-    @GetMapping("/{number}")
-    public ResponseEntity<ApiResponse> getLoanByNumber(@PathVariable("number") String number) {
-ApiResponse response;
+    @GetMapping("/{loanNumber}")
+    public ResponseEntity<ApiResponse> getLoanByNumber(@PathVariable("loanNumber") String number) {
+        ApiResponse response;
         try {
             LoanDto loan = _loanService.getLoanByProductNumber(number);
-             response = new ApiResponse(
+            response = new ApiResponse(
                     true,
                     "Prestamo consultado exitosamente",
-                     HttpStatus.OK.value(),
+                    HttpStatus.OK.value(),
                     loan,
                     LocalDateTime.now()
 
@@ -62,7 +62,7 @@ ApiResponse response;
                     HttpStatus.NOT_FOUND.value(),
                     null,
                     LocalDateTime.now()
-                    );
+            );
 
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
         } catch (Exception e) {
@@ -71,7 +71,7 @@ ApiResponse response;
                     HttpStatus.INTERNAL_SERVER_ERROR.value(),
                     null,
                     LocalDateTime.now()
-                 );
+            );
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
         }
     }

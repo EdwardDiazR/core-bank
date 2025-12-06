@@ -30,6 +30,7 @@ public class financialProductServiceImpl implements FinancialProductService {
         this.entityManager = entityManager;
     }
 
+    @Override
     public FinancialProduct createFinancialProduct(CreateFinancialProductDTO financialProductDTO) {
 
         if (financialProductDTO.relatives() == null || financialProductDTO.relatives().isEmpty()) {

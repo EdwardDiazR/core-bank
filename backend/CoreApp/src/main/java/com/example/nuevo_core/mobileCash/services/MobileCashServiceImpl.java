@@ -76,7 +76,7 @@ public class MobileCashServiceImpl {
         //todo: save in db and then atm dispense cash to customer or subagent gives money to customer
     }
 
-    public void cancelMobileCash(String mobileCashOtp) {
+    public void cancelMobileCash(Long mobileCashId) {
     }
 
     public String getStatusInSpanish(MobileCashStatus status) {
