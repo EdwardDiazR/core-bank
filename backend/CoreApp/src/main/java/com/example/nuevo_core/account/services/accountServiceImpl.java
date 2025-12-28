@@ -12,6 +12,12 @@ import com.example.nuevo_core.financialProduct.dto.CreateFinancialProductDTO;
 import com.example.nuevo_core.financialProduct.entity.FinancialProduct;
 import com.example.nuevo_core.financialProduct.interfaces.FinancialProductService;
 import com.example.nuevo_core.mobileCash.dto.MobileCashDto;
+import com.example.nuevo_core.transaction.constants.TransactionCategory;
+import com.example.nuevo_core.transaction.constants.TransactionStatus;
+import com.example.nuevo_core.transaction.constants.TransactionType;
+import com.example.nuevo_core.transaction.dto.CreateAccountTxDto;
+import com.example.nuevo_core.transaction.dto.CreateTransactionDto;
+import com.example.nuevo_core.transaction.interfaces.ITransactionService;
 import jakarta.transaction.Transactional;
 import org.springframework.stereotype.Service;
 
@@ -24,11 +30,14 @@ import java.util.List;
 public class accountServiceImpl implements IAccountService {
     private final FinancialProductService _financialProductService;
     private final AccountRepository _accountRepository;
+    private ITransactionService _transactionService;
 
     public accountServiceImpl(FinancialProductService financialProductService,
-                              AccountRepository accountRepository) {
+                              AccountRepository accountRepository,
+                              ITransactionService transactionService) {
         _financialProductService = financialProductService;
         _accountRepository = accountRepository;
+        _transactionService = transactionService;
     }
 
     @Transactional
@@ -38,8 +47,8 @@ public class accountServiceImpl implements IAccountService {
 
         FinancialProduct financialProduct = _financialProductService.createFinancialProduct(
                 new CreateFinancialProductDTO(ProductType.ACCOUNT,
-                accountDTO.relatives(),
-                accountDTO.signType()));
+                        accountDTO.relatives(),
+                        accountDTO.signType()));
 
 
         Account account = Account.builder()
@@ -71,7 +80,7 @@ public class accountServiceImpl implements IAccountService {
 
     public Account getAccountByNumber(String accountNumber) {
         return _accountRepository.findByFinancialProduct_ProductNumber(accountNumber)
-                .orElseThrow(()->new RuntimeException("Cuenta no existe"));
+                .orElseThrow(() -> new RuntimeException("Cuenta no existe"));
     }
 
     public List<Account> getAccountsByCustomerId() {
@@ -90,7 +99,7 @@ public class accountServiceImpl implements IAccountService {
     @Transactional
     public BigDecimal withdraw(Long accountId,
                                BigDecimal amount,
-                               String description
+                               CreateAccountTxDto transactionDto
     ) {
         Account account = new Account();
 
@@ -98,7 +107,7 @@ public class accountServiceImpl implements IAccountService {
             throw new RuntimeException("Cuenta inactiva");
         }
 
-        return applyDebitFromAccount(account, amount, description);
+        return applyDebitFromAccount(account, amount, transactionDto);
     }
 
 
@@ -106,7 +115,10 @@ public class accountServiceImpl implements IAccountService {
 
     }
 
-    private BigDecimal applyDebitFromAccount(Account account, BigDecimal amount, String description) {
+    @Transactional
+    private BigDecimal applyDebitFromAccount(Account account,
+                                             BigDecimal amount,
+                                             CreateAccountTxDto transactionDto) {
 
         BigDecimal availableBalance = calculateAvailableBalance(account.getTotalBalance(),
                 account.getInTransitAmount(),
@@ -122,13 +134,43 @@ public class accountServiceImpl implements IAccountService {
 
         //todo:save
         //todo:create transaction with amount.negate()
+
+        _transactionService.createTransaction(
+                new CreateTransactionDto(
+                        transactionDto.description(),
+                        transactionDto.amount(),
+                        transactionDto.type(),
+                        transactionDto.channel(),
+                        transactionDto.status(),
+                        transactionDto.category(),
+                        transactionDto.financialProductId(),
+                        transactionDto.referenceId(),
+                        newBalance,
+                        transactionDto.currency())
+        );
         return amount;
     }
 
-    private void applyCreditToAccount(Account account, BigDecimal amount, String description) {
+    @Transactional
+    private void applyCreditToAccount(Account account, BigDecimal amount, CreateAccountTxDto transactionDto) {
+        BigDecimal newBalance = BigDecimal.ONE;
         account.setTotalBalance(account.getTotalBalance().add(amount));
 
-        //todo: create transaction
+        _transactionService.createTransaction(
+                new CreateTransactionDto(
+                        transactionDto.description(),
+                        transactionDto.amount(),
+                        transactionDto.type(),
+                        transactionDto.channel(),
+                        transactionDto.status(),
+                        transactionDto.category(),
+                        transactionDto.financialProductId(),
+                        transactionDto.referenceId(),
+                        newBalance,
+                        account.getCurrency().toString())
+        );
+
+        _accountRepository.save(account);
         //todo: save in db
     }
 
@@ -148,10 +190,14 @@ public class accountServiceImpl implements IAccountService {
     public void closeAccount() {
     }
 
+    @Transactional
     public void transfer(TransferDto transferDto) {
+
+        Long referenceId = _transactionService.generateReferenceId();
         Account fromAccount = new Account();
         Account toAccount = new Account();
-        boolean canDeposit = false;
+
+        boolean canDeposit = toAccount.isAllowCredits();
 
         if (toAccount.getStatus() != AccountStatus.ACTIVE) {
             throw new RuntimeException("Cuenta inactiva");
@@ -160,15 +206,39 @@ public class accountServiceImpl implements IAccountService {
         if (canDeposit) {
             throw new RuntimeException("Esta cuenta no puede recibir deposito");
         }
+
         //debit
         String debitDescription = transferDto.desc() != null ?
                 transferDto.desc().toUpperCase()
                 : "Transf a cta " + transferDto.toAccountId();
-        BigDecimal transferAmountBalance = applyDebitFromAccount(fromAccount, transferDto.amount(), debitDescription);
+
+        CreateAccountTxDto debitTxDto = new CreateAccountTxDto(debitDescription,
+                transferDto.amount(),
+                TransactionType.DEBIT,
+                "channel",
+                TransactionStatus.COMPLETED,
+                TransactionCategory.TRANSFER,
+                fromAccount.getFinancialProduct(),
+                referenceId,
+                fromAccount.getCurrency().toString());
+
+        BigDecimal transferAmountBalance = applyDebitFromAccount(fromAccount, transferDto.amount(), debitTxDto);
 
         //credit
-        String creditDescription = transferDto.desc() != null ? transferDto.desc().toUpperCase() : "Transf desde cta " + transferDto.fromAccountId();
-        applyCreditToAccount(toAccount, transferAmountBalance, creditDescription);
+        String creditDescription = transferDto.desc() != null ?
+                transferDto.desc().toUpperCase() : "Transf desde cta " + transferDto.fromAccountId();
+
+
+        CreateAccountTxDto creditTxDto = new CreateAccountTxDto(creditDescription,
+                transferAmountBalance,
+                TransactionType.CREDIT,
+                "channel",
+                TransactionStatus.COMPLETED,
+                TransactionCategory.TRANSFER,
+                toAccount.getFinancialProduct(),
+                referenceId,
+                fromAccount.getCurrency().toString());
+        applyCreditToAccount(toAccount, transferAmountBalance, creditTxDto);
 
     }
 

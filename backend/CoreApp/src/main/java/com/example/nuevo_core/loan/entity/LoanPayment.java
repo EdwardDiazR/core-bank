@@ -27,10 +27,10 @@ public class LoanPayment {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    //@ManyToOne(fetch = FetchType.LAZY)
-    @Column(name = "loan_id", nullable = false)
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "loan_id", nullable = false)
     @JsonIgnore
-    private Long loanId;
+    private Loan loan;
 
     @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "amortization_table_item_id", nullable = false, unique = true)

@@ -139,6 +139,7 @@ public class financialProductServiceImpl implements FinancialProductService {
     }
 
     private Long nextValue(String sequenceName) {
+
         return ((Number) entityManager
                 .createNativeQuery("SELECT " + sequenceName + ".NEXTVAL FROM dual\n")
                 .getSingleResult())

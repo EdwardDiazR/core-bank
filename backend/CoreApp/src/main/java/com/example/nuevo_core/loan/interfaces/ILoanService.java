@@ -3,7 +3,7 @@ package com.example.nuevo_core.loan.interfaces;
 import com.example.nuevo_core.constants.loans.LoanInterestPeriod;
 import com.example.nuevo_core.loan.dto.loan.AdminLoanDto;
 import com.example.nuevo_core.loan.dto.loan.CreateLoanDto;
-import com.example.nuevo_core.loan.dto.loan.LoanDto;
+import com.example.nuevo_core.loan.dto.loan.LoanDTO;
 import com.example.nuevo_core.loan.entity.Loan;
 import com.example.nuevo_core.loan.services.LoanServiceImpl;
 
@@ -14,7 +14,7 @@ import java.util.Optional;
 public interface ILoanService {
     Loan getLoanById(Long loanId);
 
-    LoanDto getLoanByProductNumber(String number) throws Exception;
+    LoanDTO getLoanByProductNumber(String number) throws Exception;
     AdminLoanDto getLoanDetailsToAdmin(Long loanId);
 
     Loan createLoan(CreateLoanDto loanDto);

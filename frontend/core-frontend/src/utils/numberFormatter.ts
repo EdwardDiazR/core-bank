@@ -13,7 +13,7 @@ export const formatNumberWithCurrency = (cantidad: number, currency: string): st
   return Intl.NumberFormat('es-DO', {
     style: "currency",
     currencyDisplay: "symbol",
-    currency,
+    currency:'DOP',
     minimumFractionDigits: 2,
     currencySign: "standard",
     compactDisplay: "short",

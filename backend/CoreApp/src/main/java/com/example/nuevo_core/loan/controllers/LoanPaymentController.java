@@ -4,12 +4,14 @@ import com.example.nuevo_core.loan.entity.LoanPayment;
 import com.example.nuevo_core.loan.interfaces.ILoanPaymentService;
 import com.example.nuevo_core.loan.dto.loanPayment.PayLoanDto;
 import jakarta.websocket.server.PathParam;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
+@Slf4j
 @RestController
 @RequestMapping("api/loan-payment")
 public class LoanPaymentController {
@@ -30,12 +32,14 @@ public class LoanPaymentController {
     }
 
     @PostMapping("pay")
-    public ResponseEntity<String> payLoan(PayLoanDto payDto) {
+    public ResponseEntity<String> payLoan(@RequestBody PayLoanDto payDto) {
         try {
+            System.out.println(payDto);
             _paymentService.payLoan(payDto);
             return ResponseEntity.ok("Pago realizado correctamente");
 
         } catch (Exception e) {
+            log.error(e.getMessage());
             return new ResponseEntity<>("Error", HttpStatus.BAD_REQUEST);
         }
     }

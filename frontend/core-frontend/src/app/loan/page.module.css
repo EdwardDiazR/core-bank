@@ -7,6 +7,14 @@
   color: black;
 }
 
+.loanInfoGrid::-webkit-scrollbar{
+  display: none;
+    -ms-overflow-style: none;
+  scrollbar-width: none;
+  overflow: scroll;
+
+}
+
 .card {
   display: flex;
   flex-direction: column;
@@ -57,10 +65,11 @@
   width:250px ;
 
   input {
+    
     background-color: rgb(233, 233, 233);
     border-radius: 5px;
     padding: 2px 5px;
-    border: 1.57px solid gray;
+    border: 1.57px solid rgb(233, 233, 233);
     height: 35px;
   }
 }

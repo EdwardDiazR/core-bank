@@ -1,7 +1,7 @@
 package com.example.nuevo_core.loan.controllers;
 
 
-import com.example.nuevo_core.loan.dto.loan.LoanDto;
+import com.example.nuevo_core.loan.dto.loan.LoanDTO;
 import com.example.nuevo_core.loan.exceptions.LoanNotFoundException;
 import com.example.nuevo_core.loan.interfaces.ILoanService;
 import com.example.nuevo_core.loan.entity.Loan;
@@ -10,6 +10,7 @@ import com.example.nuevo_core.loan.repository.LoanRepository;
 import com.example.nuevo_core.loan.interfaces.ILoanPaymentService;
 import com.example.nuevo_core.utils.ApiResponse;
 import com.example.nuevo_core.utils.ErrorResponseDTO;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -21,6 +22,7 @@ import java.net.URI;
 import java.time.LocalDateTime;
 
 
+@Slf4j
 @RestController
 @RequestMapping("api/v1/loan")
 @CrossOrigin(origins = "*", methods = {RequestMethod.GET, RequestMethod.POST})
@@ -41,7 +43,7 @@ public class LoanController {
     public ResponseEntity<ApiResponse> getLoanByNumber(@PathVariable("loanNumber") String number) {
         ApiResponse response;
         try {
-            LoanDto loan = _loanService.getLoanByProductNumber(number);
+            LoanDTO loan = _loanService.getLoanByProductNumber(number);
             response = new ApiResponse(
                     true,
                     "Prestamo consultado exitosamente",
@@ -66,6 +68,7 @@ public class LoanController {
 
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
         } catch (Exception e) {
+            log.error(e.getMessage());
             response = new ApiResponse(false,
                     "Ha ocurrido un error",
                     HttpStatus.INTERNAL_SERVER_ERROR.value(),
@@ -101,17 +104,17 @@ public class LoanController {
         }
     }
 
-    @PutMapping("/update-interest-rate")
+   /* @PutMapping("/update-interest-rate")
     public ResponseEntity<String> updateInterestRate(@RequestBody Long loanId,
                                                      @RequestBody BigDecimal newInterestRate) {
         return ResponseEntity.ok("Updated");
-    }
+    }*/
 
-    @PutMapping("/change-payment-date")
+  /*  @PutMapping("/change-payment-date")
     public ResponseEntity<String> changePaymentDate(@RequestBody Long loanId,
                                                     @RequestBody int dayOfPayment) {
         return ResponseEntity.ok("PaymentDate changed");
-    }
+    }*/
 
     @PostMapping("/generate-payment-invoices")
     public ResponseEntity<String> generatePendingPayments() {

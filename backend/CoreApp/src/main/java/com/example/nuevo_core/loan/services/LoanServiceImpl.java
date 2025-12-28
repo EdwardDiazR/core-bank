@@ -6,7 +6,8 @@ import com.example.nuevo_core.financialProduct.dto.relative.RelativeDTO;
 import com.example.nuevo_core.financialProduct.entity.FinancialProduct;
 import com.example.nuevo_core.financialProduct.constants.ProductType;
 import com.example.nuevo_core.financialProduct.interfaces.FinancialProductService;
-import com.example.nuevo_core.loan.dto.loan.LoanDto;
+import com.example.nuevo_core.loan.dto.loan.*;
+import com.example.nuevo_core.loan.entity.LoanPayment;
 import com.example.nuevo_core.loan.exceptions.LoanNotFoundException;
 import com.example.nuevo_core.loan.interfaces.ILoanService;
 import com.example.nuevo_core.loan.entity.Loan;
@@ -17,11 +18,10 @@ import com.example.nuevo_core.loanAmortization.amortizationTable.IAmortizationSe
 import com.example.nuevo_core.constants.loans.LoanInterestPeriod;
 import com.example.nuevo_core.constants.loans.PaymentFrequency;
 import com.example.nuevo_core.loan.constants.LoanStatus;
-import com.example.nuevo_core.loan.dto.loan.AdminLoanDto;
-import com.example.nuevo_core.loan.dto.loan.CreateLoanDto;
-import com.example.nuevo_core.loan.dto.loan.DeleteLoanDto;
 import com.example.nuevo_core.loan.exceptions.LoanAlreadyDeletedException;
 import com.example.nuevo_core.loan.repository.LoanRepository;
+import com.example.nuevo_core.transaction.dto.TransactionDTO;
+import com.example.nuevo_core.transaction.model.Transaction;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Lazy;
@@ -48,27 +48,33 @@ public class LoanServiceImpl implements ILoanService {
     private final LoanRepository loanRepository;
 
     private final FinancialProductService _financialProductService;
+    private final LoanPaymentServiceImpl _loanPaymentService;
 
 
     public LoanServiceImpl(@Lazy IAmortizationService amortizationService,
                            LoanRepository repository,
-                           FinancialProductService financialProductService) {
+                           FinancialProductService financialProductService,
+                           @Lazy LoanPaymentServiceImpl loanPaymentService) {
         loanRepository = repository;
         _amortizationService = amortizationService;
         _financialProductService = financialProductService;
+        _loanPaymentService = loanPaymentService;
     }
 
     public Loan getLoanById(Long loanId) {
-        Loan loan = loanRepository.getReferenceById(loanId);
+        Loan loan = loanRepository.findById(loanId).orElseThrow(() -> new LoanNotFoundException("Prestamo no existe"));
         return loan;
     }
 
     @Transactional(readOnly = true)
-    public LoanDto getLoanByProductNumber(String loanNumber) {
+    public LoanDTO getLoanByProductNumber(String loanNumber) {
 
         Loan loan = loanRepository.findByFinancialProduct_ProductNumber(loanNumber)
                 .orElseThrow(() -> new LoanNotFoundException("Prestamo No." + loanNumber + " no existe"));
 
+        List<LoanPayment> pendingInstallments = _loanPaymentService.getDueInstallmentsByLoanId(loan.getId());
+
+        //System.out.println(pendingInstallments);
         BigDecimal roundedInterestRate = loan.getInterestRate()
                 .multiply(BigDecimal.valueOf(100))
                 .setScale(2, RoundingMode.HALF_UP);
@@ -87,22 +93,42 @@ public class LoanServiceImpl implements ILoanService {
         if (loan.getAmortizationTable().getItems().isEmpty()) {
             amortizationTableDTO = null;
         }
-        LoanDto dto = new LoanDto(
-                loan.getFinancialProduct().getProductNumber(),
-                loan.getOutstandingPrincipalAmount(),
-                loan.getInterestBalance(),
-                roundedInterestRate,
-                loan.getInstallmentAmount(),
-                loan.getNextPaymentDate(),
-                loan.getDueDate(),
-                loan.getPaymentsMade(),
-                loan.getPaymentsPending(),
-                loan.getFinancialProduct(),
-                amortizationTableDTO
-        );
 
+        List<TransactionDTO> transactions = loan.getFinancialProduct()
+                .getTransactions()
+                .stream()
+                .map(t ->
+                        new TransactionDTO(t.getAmount(),
+                                t.getBalanceAfter(),
+                                t.getType(),
+                                t.getDescription(),
+                                t.getReferenceId()))
+                .toList();
 
-        return dto;
+        LoanDTO loanDto = LoanDTO.builder()
+                .number(loan.getFinancialProduct().getProductNumber())
+                .currency(loan.getCurrency())
+                .status(loan.getStatus())
+                .termInMonths(loan.getTermInMonths())
+                .paymentsMade(loan.getPaymentsMade())
+                .paymentsPending(loan.getPaymentsPending())
+                .principalAmount(loan.getPrincipalAmount())
+                .outstandingPrincipalBalance(loan.getOutstandingPrincipalAmount())
+                .availableAmountForDisbursement(loan.getAvailableAmountForDisbursement())
+                .interestBalance(loan.getInterestBalance())
+                .interestRate(loan.getInterestRate())
+                .installmentAmount(loan.getInstallmentAmount())
+                .transactions(transactions)
+                .pendingInstallments(pendingInstallments)
+                .amortizationTable(amortizationTableDTO)
+                .nextPaymentDate(loan.getNextPaymentDate())
+                .lastPaymentDate(loan.getLastPaymentDate())
+                .dueDate(loan.getDueDate())
+                .lastInterestRateReviewDate(loan.getLastInterestRateReviewDate())
+                .relatives(relatives)
+                .build();
+
+        return loanDto;
     }
 
     @Transactional()
@@ -272,7 +298,6 @@ public class LoanServiceImpl implements ILoanService {
 
     }
 
-
     private List<String> getLoanRelateds(long id) {
         List<String> related = new ArrayList<>();
 
@@ -308,6 +333,8 @@ public class LoanServiceImpl implements ILoanService {
     }
 
     public void calculateMora() {
+        int day = 1;
+//        String dayName = switch (day){case 1 -> "Lunes";};
     }
 
     public AdminLoanDto getLoanDetailsToAdmin(Long loanId) {

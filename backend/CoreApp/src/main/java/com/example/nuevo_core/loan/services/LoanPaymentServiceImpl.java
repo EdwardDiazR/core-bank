@@ -13,15 +13,22 @@ import com.example.nuevo_core.loan.interfaces.ILoanPaymentService;
 import com.example.nuevo_core.loan.constants.PaymentStatus;
 import com.example.nuevo_core.loan.dto.loanPayment.PayLoanDto;
 import com.example.nuevo_core.loan.repository.LoanPaymentRepository;
+import com.example.nuevo_core.transaction.constants.TransactionCategory;
+import com.example.nuevo_core.transaction.constants.TransactionStatus;
+import com.example.nuevo_core.transaction.constants.TransactionType;
+import com.example.nuevo_core.transaction.dto.CreateAccountTxDto;
+import com.example.nuevo_core.transaction.dto.CreateTransactionDto;
+import com.example.nuevo_core.transaction.interfaces.ITransactionService;
 import jakarta.persistence.EntityManager;
-import jakarta.transaction.Transactional;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
@@ -36,35 +43,36 @@ public class LoanPaymentServiceImpl implements ILoanPaymentService {
     private final LoanRepository _loanRepository;
     private final LoanPaymentRepository _loanPaymentRepository;
     private final IAccountService _accountService;
+    private final ITransactionService _transactionService;
 
     public LoanPaymentServiceImpl(ILoanService loanService,
                                   IAmortizationService amortizationService,
                                   LoanRepository loanRepository,
                                   LoanPaymentRepository repo,
                                   IAmortizationTableItemRepository amortItemRepo,
-                                  IAccountService accountService) {
+                                  IAccountService accountService,
+                                  ITransactionService transactionService) {
         _loanService = loanService;
         _amortizationService = amortizationService;
         _loanRepository = loanRepository;
         _loanPaymentRepository = repo;
         _amortizationItemRepo = amortItemRepo;
         _accountService = accountService;
+        _transactionService = transactionService;
     }
 
     @Autowired
     EntityManager entityManager;
 
+    @Override
     @Transactional
     public void generateLoanPaymentInvoices() {
         log.info("Generating Invoices");
         entityManager.clear();
-        List<AmortizationTableItem> items = findPendingInstallmentsForInvoicing();
+        List<AmortizationTableItem> pendingInstallmentsForInvoicing = findPendingInstallmentsForInvoicing();
+        List<LoanPayment> loanPaymentsInvoices = new ArrayList<>();
 
-        for (AmortizationTableItem amortizationItem : items) {
-            System.out.println(amortizationItem.getAmortizationTable().getLoan());
-        }
-
-        for (AmortizationTableItem amortizationItem : items) {
+        for (AmortizationTableItem amortizationItem : pendingInstallmentsForInvoicing) {
             boolean exists = _loanPaymentRepository.existsByAmortizationItemId(amortizationItem);
             if (!exists) {
                 LoanPayment payment = LoanPayment.builder()
@@ -78,43 +86,49 @@ public class LoanPaymentServiceImpl implements ILoanPaymentService {
                         .status(PaymentStatus.PENDING)
                         .lastPaymentDate(null)
                         .isPaid(false)
-                        .loanId(amortizationItem.getAmortizationTable().getLoan().getId())
+                        .loan(amortizationItem.getAmortizationTable().getLoan())
                         .build();
-                entityManager.persist(payment);
-            } else {
-                continue;
+                loanPaymentsInvoices.add(payment);
             }
         }
-
+        if (!loanPaymentsInvoices.isEmpty()) {
+            _loanPaymentRepository.saveAll(loanPaymentsInvoices);
+        }
     }
 
+    @Override
     public List<AmortizationTableItem> findPendingInstallmentsForInvoicing() {
         LocalDate today = LocalDate.now();
         LocalDate fiveDaysLater = today.plusDays(5);
-
         return _loanPaymentRepository.generateLoanPayments(today, fiveDaysLater);
     }
 
+    @Override
+    @Transactional(readOnly = true)
     public List<LoanPayment> getDueInstallmentsByLoanId(Long loanId) {
         return _loanPaymentRepository.findPendingInstallmentsByLoanId(loanId);
     }
 
+    @Override
+    @Transactional(readOnly = true)
     public List<LoanCharge> getDueChargesByLoanId(Long loanId) {
         return new ArrayList<>();
     }
 
     public List<Long> getAllDueInstallmentsToAutopay() {
-         LocalDateTime now = LocalDateTime.now();
+        LocalDateTime now = LocalDateTime.now();
 
         return _loanPaymentRepository.findLoansWithDueInstallmentsToAutopay(now.toLocalDate());
     }
 
     @Transactional
     public void payLoan(PayLoanDto payLoanDto) {
-        List<LoanPayment> dueInstallments = getDueInstallmentsByLoanId(payLoanDto.loan().getId());
-        List<LoanCharge> dueCharges = getDueChargesByLoanId(payLoanDto.loan().getId());
+        Loan loan = _loanService.getLoanById(payLoanDto.loanId());
+        List<LoanPayment> dueInstallments = getDueInstallmentsByLoanId(loan.getId());
+        List<LoanCharge> dueCharges = getDueChargesByLoanId(loan.getId());
 
-        processPayment(dueInstallments, dueCharges, payLoanDto.loan(), payLoanDto.amount(), payLoanDto.source());
+        Long referenceId = _transactionService.generateReferenceId();
+        processPayment(dueInstallments, dueCharges, loan, payLoanDto.amount(), payLoanDto.source(), referenceId);
     }
 
     @Transactional
@@ -134,125 +148,168 @@ public class LoanPaymentServiceImpl implements ILoanPaymentService {
         if (accountBalance.compareTo(BigDecimal.ZERO) <= 0) {
             throw new RuntimeException("No balance");
         }
+        Long referenceId = _transactionService.generateReferenceId();
 
-        String transactionDescription = "Autopago Prestamo " + loan.getId();
+        String debitTxDescription = String.format("Autopago Prest. %s",
+                loan.getFinancialProduct().getProductNumber());
+
+        CreateAccountTxDto accountDebitTx = new CreateAccountTxDto(
+                debitTxDescription,
+                amountToDebit,
+                TransactionType.DEBIT,
+                "BANK", // ejemplo: "CUENTA-1234"
+                TransactionStatus.COMPLETED,
+                TransactionCategory.PAYMENT,
+                loan.getFinancialProduct(),
+                referenceId,
+                loan.getCurrency()
+        );
 
         BigDecimal remainingBalance = _accountService.withdraw(
                 loan.getLinkedAccount(),
                 amountToDebit,
-                transactionDescription);
+                accountDebitTx);
 
-        processPayment(dueInstallments, dueCharges, loan, remainingBalance, "AUTO PAGO");
+        if (remainingBalance.compareTo(BigDecimal.ZERO) > 0) {
+            processPayment(dueInstallments, dueCharges, loan, remainingBalance, "AUTO PAGO", referenceId);
+        }
     }
 
-    @Transactional
     public void processPayment(List<LoanPayment> installments,
                                List<LoanCharge> charges,
                                Loan loan,
                                BigDecimal amountToPay,
-                               String paymentSource) {
-        LocalDateTime now = LocalDateTime.now();
-        BigDecimal remainingBalance = amountToPay;
+                               String paymentSource,
+                               Long transactionReferenceId) {
+        try {
+            LocalDateTime now = LocalDateTime.now();
+            BigDecimal remainingBalance = amountToPay;
 
-        if (!charges.isEmpty()) {
-            for (LoanCharge charge : charges) {
-                BigDecimal lateFeePayment = remainingBalance.min(charge.getAmount());
+            //Pay charges first
+            if (!charges.isEmpty()) {
+                for (LoanCharge charge : charges) {
+                    BigDecimal lateFeePayment = remainingBalance.min(charge.getAmount());
 
-                remainingBalance = remainingBalance.subtract(lateFeePayment);
-                //Transfer amount to internal account
+                    remainingBalance = remainingBalance.subtract(lateFeePayment);
+                    //Transfer amount to internal account
 
-                if (lateFeePayment.compareTo(charge.getAmount()) == 0) {
-                    charge.setPaid(true);
+                    if (lateFeePayment.compareTo(charge.getAmount()) == 0) {
+                        charge.setPaid(true);
+                    }
+                    //todo: generate transaction in loan of late fee payment
                 }
-                //todo: generate transaction in loan of late fee payment
             }
+
+            //Pay installments
+            for (LoanPayment installment : installments) {
+                BigDecimal installmentPending = installment.getPendingInstallmentBalance();
+
+                BigDecimal interestPending = installment
+                        .getInterestDue()
+                        .subtract(installment.getInterestPaid());
+
+                BigDecimal outstandingPrincipalPending = installment
+                        .getOutstandingPrincipalDue()
+                        .subtract(installment.getOutstandingPrincipalPaid());
+
+                //Subtract capital paid from remaining balance to apply to installment interest
+                BigDecimal interestPayment = remainingBalance.min(interestPending);
+                remainingBalance = remainingBalance.subtract(interestPayment);
+
+                BigDecimal updatedLoanInterestBalance = loan.getInterestBalance().subtract(interestPayment);
+                loan.setInterestBalance(updatedLoanInterestBalance);
+
+                installment.setInterestPaid(installment.getInterestPaid()
+                        .add(interestPayment));
+                //todo: transfer that amount to interest internal account
+
+                //Subtract capital paid from remaining balance to apply to installment outstandingPrincipal
+                BigDecimal outstandingPrincipalPayment = remainingBalance.min(outstandingPrincipalPending);
+                remainingBalance = remainingBalance.subtract(outstandingPrincipalPayment);
+
+                BigDecimal updatedLoanOutstandingPrincipalBalance = loan.getOutstandingPrincipalAmount()
+                        .subtract(outstandingPrincipalPayment);
+
+                loan.setOutstandingPrincipalAmount(updatedLoanOutstandingPrincipalBalance);
+
+
+                installment.setOutstandingPrincipalPaid(
+                        installment.getOutstandingPrincipalPaid()
+                                .add(outstandingPrincipalPayment));
+
+                //todo: transfer that amount to capital internal account
+
+                installment.recalculateTotal();//Recalculate total installment balance pending after payment
+                installmentPending = installment.getPendingInstallmentBalance();
+
+                installment.setStatus(updateLoanPaymentStatus(installmentPending, installment.getInstallmentAmount()));
+
+                installment.setPaid(installment.getStatus() == PaymentStatus.PAID);
+
+                installment.setLastPaymentDate(now);
+                LocalDate nextPaymentDate = getNextPaymentDateByLoan(loan);
+
+                if (nextPaymentDate != null) {
+                    loan.setNextPaymentDate(nextPaymentDate);
+                }
+
+                BigDecimal totalPaid = outstandingPrincipalPayment.add(interestPayment);
+
+                if (totalPaid.equals(installmentPending)) {
+                    loan.setPaymentsMade(loan.getPaymentsMade() + 1);
+                    loan.setPaymentsPending((loan.getPaymentsPending() - 1));
+                }
+
+                loan.setTotalInstallmentBalance(loan.getTotalInstallmentBalance().subtract(totalPaid));
+                loan.setLastPaymentDate(now);
+
+                AmortizationTableItem amortizationItem = _amortizationItemRepo.getReferenceById(installment.getAmortizationItemId().getId());
+                amortizationItem.setPaid(installment.isPaid());
+                amortizationItem.setPaidDate(installment.isPaid() ? now.toLocalDate() : null);
+
+
+                //todo: save updated amortizationItem
+                String LoanTransactionDesc = String.format("PAGO CUOTA %s",
+                        installment.getDueDate().format(DateTimeFormatter.ofPattern("MMMM-yyyy")));
+
+                CreateTransactionDto tdto = new CreateTransactionDto(
+                        LoanTransactionDesc,
+                        totalPaid,
+                        TransactionType.CREDIT,
+                        "bank",
+                        TransactionStatus.COMPLETED,
+                        TransactionCategory.PAYMENT,
+                        loan.getFinancialProduct(),
+                        transactionReferenceId,
+                        loan.getOutstandingPrincipalAmount(),
+                        loan.getCurrency()
+                );
+                _amortizationItemRepo.save(amortizationItem);
+                //todo: update payments made and pending by amort item where isPaid and !isPaid
+                _loanRepository.save(loan);
+                _loanPaymentRepository.save(installment);
+                _transactionService.createTransaction(tdto);
+                log.info("Pago realizado correctamente Prest. No.: {} ", loan.getId());
+
+                if (remainingBalance.compareTo(BigDecimal.ZERO) > 0) {
+                    //logic to do with remaining balance
+
+                } else {
+                    break;
+                }
+            }
+        } catch (Exception e) {
+            log.error("ROLLBACK CAUSE → {}", e.getClass().getName());
+            log.error("MESSAGE → {}", e.getMessage());
+            throw e;
         }
-
-        for (LoanPayment installment : installments) {
-            BigDecimal installmentPending = installment.getPendingInstallmentBalance();
-
-            BigDecimal interestPending = installment
-                    .getInterestDue()
-                    .subtract(installment.getInterestPaid());
-
-            BigDecimal outstandingPrincipalPending = installment
-                    .getOutstandingPrincipalDue()
-                    .subtract(installment.getOutstandingPrincipalPaid());
-
-            //Subtract capital paid from remaining balance to apply to installment interest
-            BigDecimal interestPayment = remainingBalance.min(interestPending);
-            remainingBalance = remainingBalance.subtract(interestPayment);
-
-            BigDecimal updatedLoanInterestBalance = loan.getInterestBalance().subtract(interestPayment);
-            loan.setInterestBalance(updatedLoanInterestBalance);
-
-            installment.setInterestPaid(installment.getInterestPaid()
-                    .add(interestPayment));
-            //todo: transfer that amount to interest internal account
-
-            //Subtract capital paid from remaining balance to apply to installment outstandingPrincipal
-            BigDecimal outstandingPrincipalPayment = remainingBalance.min(outstandingPrincipalPending);
-            remainingBalance = remainingBalance.subtract(outstandingPrincipalPayment);
-
-            BigDecimal updatedLoanOutstandingPrincipalBalance = loan.getOutstandingPrincipalAmount()
-                    .subtract(outstandingPrincipalPayment);
-
-            loan.setOutstandingPrincipalAmount(updatedLoanOutstandingPrincipalBalance);
-
-            loan.setPaymentsMade(loan.getPaymentsMade() + 1);
-            loan.setPaymentsPending((loan.getPaymentsPending() - 1));
-            installment.setOutstandingPrincipalPaid(
-                    installment.getOutstandingPrincipalPaid()
-                            .add(outstandingPrincipalPayment));
-
-            //todo: transfer that amount to capital internal account
-
-            installment.recalculateTotal();//Recalculate total installment balance pending after payment
-            installmentPending = installment.getPendingInstallmentBalance();
-
-            installment.setStatus(updateLoanPaymentStatus(installmentPending, installment.getInstallmentAmount()));
-
-            installment.setPaid(installment.getStatus() == PaymentStatus.PAID);
-
-            installment.setLastPaymentDate(now);
-            LocalDate nextPaymentDate = getNextPaymentDateByLoan(loan);
-
-            if (nextPaymentDate != null) {
-                loan.setNextPaymentDate(nextPaymentDate);
-            }
-
-            BigDecimal totalPaid = outstandingPrincipalPayment.add(interestPayment);
-            loan.setTotalInstallmentBalance(loan.getTotalInstallmentBalance().subtract(totalPaid));
-            loan.setLastPaymentDate(now);
-
-            AmortizationTableItem amortizationItem = _amortizationItemRepo.getReferenceById(installment.getAmortizationItemId().getId());
-            amortizationItem.setPaid(installment.isPaid());
-            amortizationItem.setPaidDate(installment.isPaid() ? now.toLocalDate() : null);
-
-            _amortizationItemRepo.save(amortizationItem);
-            //todo: update payments made and pending by amort item where isPaid and !isPaid
-          /*  _loanRepository.save(loan);
-
-            _loanPaymentRepository.save(installment);*/
-
-            //todo: save updated amortizationItem
-
-            log.info("Autopay completed loan: {} ", loan.getId());
-
-            if (remainingBalance.compareTo(BigDecimal.ZERO) > 0) {
-                //logic to do with remaining balance
-
-            } else {
-                break;
-            }
-        }
-
 
     }
 
 
     @Transactional
     public void payInstallment(LoanPayment installment) {
+
     }
 
     @Transactional
@@ -291,8 +348,8 @@ public class LoanPaymentServiceImpl implements ILoanPaymentService {
         return PaymentStatus.PENDING;
     }
 
-    public List<LoanPayment> findOverDueInstallments(LocalDate date){
-      return  _loanPaymentRepository.findOverDueInstallments(date);
+    public List<LoanPayment> findOverDueInstallments(LocalDate date) {
+        return _loanPaymentRepository.findOverDueInstallments(date);
     }
 }
 

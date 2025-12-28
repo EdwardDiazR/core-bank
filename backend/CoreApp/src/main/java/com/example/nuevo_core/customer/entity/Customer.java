@@ -6,6 +6,7 @@ import jakarta.persistence.*;
 import lombok.Builder;
 import lombok.Data;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Set;
 
@@ -18,23 +19,41 @@ public class Customer {
 
     @Enumerated(EnumType.STRING)
     private DocumentType documentType;
+
     private String documentId;
     private String nationality;
+    private LocalDate dateOfBirth;
+    private String placeOfBirth;
+    private int age;
+
     private LocalDateTime createAt;
 
-    @OneToMany(mappedBy = "customer", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "customer",
+            fetch = FetchType.LAZY,
+            cascade = CascadeType.ALL,
+            orphanRemoval = true)
     private Set<Address> addresses;
 
-    @OneToMany(mappedBy = "customer", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "customer",
+            fetch = FetchType.LAZY,
+            cascade = CascadeType.ALL,
+            orphanRemoval = true)
     private Set<Email> emails;
 
-    @OneToMany(mappedBy = "customer", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "customer",
+            fetch = FetchType.LAZY,
+            cascade = CascadeType.ALL,
+            orphanRemoval = true)
     private Set<PhoneNumber> phoneNumbers;
+
     private char gender;
-    private int age;
     private String status; //PUEDE SER NO APTO, MOROSO, ETC
     private boolean isPEP;
     private boolean isUnderAge;
     private boolean isEmployee;
+    private boolean isDeceased;
+
+    private LocalDateTime lastDueDiligenceDate;
+
 }
 

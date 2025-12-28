@@ -1,40 +1,67 @@
 package com.example.nuevo_core.transaction.model;
 
 import com.example.nuevo_core.financialProduct.entity.FinancialProduct;
+import com.example.nuevo_core.transaction.constants.TransactionCategory;
+import com.example.nuevo_core.transaction.constants.TransactionStatus;
+import com.example.nuevo_core.transaction.constants.TransactionType;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
+import lombok.*;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+
 @Entity
-@Table(name = "transactions")
+@Table(name = "transaction")
+@Builder
+@Getter
+@Setter
+@AllArgsConstructor
+@NoArgsConstructor
 public class Transaction {
     @Id
     @GeneratedValue(strategy = GenerationType.SEQUENCE)
     @Column(name = "id")
     private Long id;
 
-    @ManyToOne
-    @JoinColumn(name = "financial_product_id")
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "tx_financial_product_id")
+    @JsonIgnore
     private FinancialProduct financialProduct;
 
-    @Column(name = "description")
+    @Column(name = "tx_description")
     private String description;
 
-    @Column(name = "effective_date")
+    @Enumerated(EnumType.STRING)
+    @Column(name = "tx_category")
+    private TransactionCategory category;
+
+    @Column(name = "tx_posted_date")
     private LocalDateTime effectiveDate;
 
-    @Column(name = "entry_date")
+    @Column(name = "tx_entry_date")
     private LocalDateTime entryDate;
 
-    @Column(name = "amount")
+    @Column(name = "tx_amount")
     private BigDecimal amount;
 
-    @Column(name = "currency")
+    @Column(name = "tx_currency")
     private String currency;
 
-    @Column(name = "type")
-    private String type;//Debit or credit
+    @Enumerated(EnumType.STRING)
+    @Column(name = "tx_type")
+    private TransactionType type;//Debit or credit
 
-    @Column(name = "channel")
+    @Column(name = "tx_channel")
     private String channel;
+
+    @Column(name = "tx_balance_after")
+    private BigDecimal balanceAfter;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "tx_status")
+    private TransactionStatus status;
+
+    @Column(name = "tx_reference_id") //todo: UNIQUE BETWEEN (CREDIT OR DEBIT, FINANCIAL PRODUCT, REFERENCE ID)
+    private Long referenceId;
 }

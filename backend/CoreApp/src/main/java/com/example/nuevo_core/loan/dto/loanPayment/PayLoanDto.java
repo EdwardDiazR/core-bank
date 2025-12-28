@@ -6,7 +6,7 @@ import java.math.BigDecimal;
 
 
 public record PayLoanDto(
-        Loan loan,
+        Long loanId,
         BigDecimal amount,
         String source) {
 }

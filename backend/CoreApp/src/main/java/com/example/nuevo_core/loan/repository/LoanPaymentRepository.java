@@ -11,7 +11,7 @@ import java.util.List;
 
 public interface LoanPaymentRepository extends JpaRepository<LoanPayment, Long> {
     @Query("""
-                SELECT DISTINCT p.loanId
+                SELECT DISTINCT p.loan
                 FROM LoanPayment p
                 WHERE p.status IN ('PENDING', 'PARTIAL')
                   AND p.dueDate <= :date
@@ -34,7 +34,7 @@ public interface LoanPaymentRepository extends JpaRepository<LoanPayment, Long> 
     @Query("""
                 SELECT p
                 FROM LoanPayment p
-                WHERE p.loanId = :loanId
+                WHERE p.loan.id = :loanId
                 AND p.isPaid = false
                 AND p.pendingInstallmentBalance > 0
             """)

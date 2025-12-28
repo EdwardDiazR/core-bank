@@ -4,5 +4,6 @@ import com.example.nuevo_core.loanAmortization.amortizationTableItem.Amortizatio
 
 import java.util.List;
 
-public record AmortizationTableDTO(String loanNumber, List<AmortizationTableItem> items) {
+public record AmortizationTableDTO(String loanNumber,
+                                   List<AmortizationTableItem> items) {
 }

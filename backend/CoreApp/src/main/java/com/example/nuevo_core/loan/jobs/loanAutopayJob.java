@@ -20,8 +20,7 @@ public class loanAutopayJob {
         _loanPaymentService = loanPaymentService;
     }
 
-    @Transactional
-    @Scheduled(cron = "0 0 0 * * *")
+    @Scheduled(cron = "0 15 19 * * *")
     public void executeAutoPayBatch() {
         String msj = String.format("Autopay attempted at %s", now.format(DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm a")));
         log.info(msj);
@@ -38,6 +37,7 @@ public class loanAutopayJob {
                 log.info("Autopay procesado para prestamo: {}", loanId);
 
             } catch (Exception e) {
+                log.error(e.getMessage());
                 log.error("Error procesando prestamo: {}",loanId);
             }
         }

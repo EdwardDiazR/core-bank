@@ -1,8 +1,8 @@
 "use client";
 import { useEffect, useState } from "react";
-import { AmortizationTable } from "./models/AmortizationTable";
+import { AmortizationTable } from "../models/AmortizationTable";
 import axios, { AxiosResponse } from "axios";
-import { Loan } from "./models/Loan";
+import { Loan } from "../models/Loan";
 
 export default function Home() {
   const [table, setTable] = useState<AmortizationTable>({ id: 0, loanId: 0, item: [] });
@@ -31,10 +31,7 @@ const [loan,setLoan] = useState<Loan>();
     })
   }
 
-  useEffect(() => {
-    getAmortizationTable();
-    getLoan()
-  }, []);
+
 
   const formatNumber = (cantidad: number): string => {
     return Intl.NumberFormat("en-US", {

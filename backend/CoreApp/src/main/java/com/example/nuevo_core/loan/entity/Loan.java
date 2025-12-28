@@ -9,6 +9,7 @@ import jakarta.annotation.Nonnull;
 import jakarta.annotation.Nullable;
 import jakarta.persistence.*;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import lombok.*;
@@ -18,6 +19,7 @@ import org.hibernate.annotations.Cascade;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Entity
 @Table(name = "loan")
@@ -26,7 +28,7 @@ import java.time.LocalDateTime;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-public class Loan  {
+public class Loan {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -48,6 +50,7 @@ public class Loan  {
     private String currency;
 
     @Column(name = "principal_amount")
+    @DecimalMin(value = "1.00", message = "El préstamo debe ser mayor a 1")
     private BigDecimal principalAmount; //Monto del desembolso
 
     @Column(name = "available_amount_for_disbursement")
@@ -58,6 +61,8 @@ public class Loan  {
 
     @Column(name = "interest_balance")
     private BigDecimal interestBalance;
+
+
 
     @Column(name = "interest_rate", precision = 12, scale = 10)
     private BigDecimal interestRate;
@@ -77,7 +82,7 @@ public class Loan  {
     @Column(name = "installment_amount")
     private BigDecimal installmentAmount; //Cuota
 
-    @Column(name = "late_fee_rate",precision = 12,scale = 10)
+    @Column(name = "late_fee_rate", precision = 12, scale = 10)
 
     private BigDecimal lateFeeRate;
 
@@ -159,4 +164,7 @@ public class Loan  {
     @Nullable
     @OneToOne(mappedBy = "loan", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     private AmortizationTable amortizationTable;
+
+    @OneToMany(mappedBy = "loan", fetch = FetchType.LAZY)
+    private List<LoanPayment> payments;
 }
