@@ -24,6 +24,7 @@ public class LoanDTO {
 
     /*General information*/
     private String number;
+    private String publicId;
     private String currency;
 
     private LoanStatus status;

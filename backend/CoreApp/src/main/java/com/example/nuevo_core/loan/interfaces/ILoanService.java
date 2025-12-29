@@ -15,6 +15,8 @@ public interface ILoanService {
     Loan getLoanById(Long loanId);
 
     LoanDTO getLoanByProductNumber(String number) throws Exception;
+    LoanDTO getLoanByPublicId(String loanPublicId) throws Exception;
+
     AdminLoanDto getLoanDetailsToAdmin(Long loanId);
 
     Loan createLoan(CreateLoanDto loanDto);

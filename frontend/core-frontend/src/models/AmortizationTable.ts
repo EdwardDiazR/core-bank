@@ -1,18 +1,17 @@
 export interface AmortizationTable {
-  id: number;
-  loanId: number;
-  item: AmortizationTableItem[];
+  loanNumber: number;
+  items: AmortizationTableItem[];
 }
 
 export interface AmortizationTableItem {
-  reference: string;             // UUID → string
+  id: number;
   installmentNumber: number;
-  cuota: number;                 // BigDecimal → number
+  cuota: number;
   capital: number;
   interes: number;
-  lateFeeAmount: number;
+  charges: number;
   saldo: number;
-  paymentDate: string;           // LocalDate → string (ISO date)
-  isPaid: boolean;
-  paidDate: string | null;       // puede ser null si no está pagado
+  paymentDate: Date;
+  paidDate: Date | null;
+  paid: boolean; // puede ser null si no está pagado
 }

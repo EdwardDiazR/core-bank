@@ -47,5 +47,6 @@ public interface LoanRepository extends JpaRepository<Loan, Long> {
     List<Loan> getLoansByStatusNormal();
 
     Optional<Loan> findByFinancialProduct_ProductNumber(String loanNumber);
+    Optional<Loan> findByFinancialProduct_PublicId(String loanPublicId);
     //String getLoanRelateds(@Param("id") Long loanId);
 }

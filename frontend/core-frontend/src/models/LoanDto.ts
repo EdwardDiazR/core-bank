@@ -1,3 +1,5 @@
+import { AmortizationTable } from "./AmortizationTable";
+
 export interface LoanDto {
   number: string;
   principalAmount: number;
@@ -16,6 +18,7 @@ export interface LoanDto {
   lastPaymentDate:Date,
   availableAmountForDisbursement:number,
   lastInterestRateReviewDate:Date
+  ,amortizationTable:AmortizationTable
 }
 
 export interface financialProduct {

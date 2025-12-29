@@ -12,11 +12,13 @@ import com.example.nuevo_core.financialProduct.repository.FinancialProductReposi
 import com.example.nuevo_core.loan.exceptions.InvalidSignTypeException;
 import jakarta.persistence.EntityManager;
 import org.springframework.stereotype.Service;
-
 import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.UUID;
 import java.util.stream.Collectors;
+import com.github.f4b6a3.ulid.UlidCreator;
+
 
 @Service
 public class financialProductServiceImpl implements FinancialProductService {
@@ -43,7 +45,7 @@ public class financialProductServiceImpl implements FinancialProductService {
         }
 
         if (financialProductDTO.signType() != AccountSignType.UNIQUE && relativesQuantity < 2) {
-            throw new InvalidSignTypeException("La condicion de firma requiere mas de un firmante");
+            throw new InvalidSignTypeException("La condicion de firma " + financialProductDTO.signType() + " requiere mas de un firmante");
         }
 
         if (financialProductDTO.relatives().stream().filter(CreateAccountRelativeDTO::isPrincipal).count() > 1) {
@@ -71,6 +73,8 @@ public class financialProductServiceImpl implements FinancialProductService {
 
         String regionalProductNumber = "BANK-" + String.format("%020d", generatedProductNumber);
 
+
+        String publicIdGenerated = UlidCreator.getUlid().toString();
         FinancialProduct financialProduct = FinancialProduct.builder()
                 .productType(financialProductDTO.productType())
                 .createdAt(LocalDateTime.now())
@@ -78,6 +82,7 @@ public class financialProductServiceImpl implements FinancialProductService {
                 .signType(financialProductDTO.signType())
                 .principalCustomerId(principalCustomerId)
                 .productNumber(productNumber)
+                .publicId(publicIdGenerated)
                 .regionalProductNumber(regionalProductNumber)
                 .relatives(relatives)
                 .transactions(null)

@@ -39,7 +39,7 @@ public class LoanController {
         _loanPaymentService = loanPaymentService;
     }
 
-    @GetMapping("/{loanNumber}")
+    @GetMapping("/search/{loanNumber}")
     public ResponseEntity<ApiResponse> getLoanByNumber(@PathVariable("loanNumber") String number) {
         ApiResponse response;
         try {
@@ -78,6 +78,48 @@ public class LoanController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
         }
     }
+
+    @GetMapping("/{loanPublicId}")
+    public ResponseEntity<ApiResponse> getLoanByPublicId(@PathVariable("loanPublicId") String loanPublicId) {
+        ApiResponse response;
+        try {
+            LoanDTO loan = _loanService.getLoanByPublicId(loanPublicId);
+            response = new ApiResponse(
+                    true,
+                    "Prestamo consultado exitosamente",
+                    HttpStatus.OK.value(),
+                    loan,
+                    LocalDateTime.now()
+
+            );
+
+            return ResponseEntity.ok(response);
+        } catch (LoanNotFoundException notFoundException) {
+            /*ErrorResponseDTO error = new ErrorResponseDTO(HttpStatus.NOT_FOUND.value(),
+                    notFoundException.getMessage(),
+                   );*/
+
+            response = new ApiResponse(false,
+                    notFoundException.getMessage(),
+                    HttpStatus.NOT_FOUND.value(),
+                    null,
+                    LocalDateTime.now()
+            );
+
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
+        } catch (Exception e) {
+            log.error(e.getMessage());
+            response = new ApiResponse(false,
+                    "Ha ocurrido un error",
+                    HttpStatus.INTERNAL_SERVER_ERROR.value(),
+                    null,
+                    LocalDateTime.now()
+            );
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+        }
+    }
+
+
 
     @PostMapping()
     public ResponseEntity<Object> createLoan(@RequestBody CreateLoanDto loanDto) {

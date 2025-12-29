@@ -107,6 +107,7 @@ public class LoanServiceImpl implements ILoanService {
 
         LoanDTO loanDto = LoanDTO.builder()
                 .number(loan.getFinancialProduct().getProductNumber())
+                .publicId(loan.getFinancialProduct().getPublicId())
                 .currency(loan.getCurrency())
                 .status(loan.getStatus())
                 .termInMonths(loan.getTermInMonths())
@@ -131,6 +132,71 @@ public class LoanServiceImpl implements ILoanService {
         return loanDto;
     }
 
+    @Transactional(readOnly = true)
+    public LoanDTO getLoanByPublicId(String loanPublicId) {
+
+        Loan loan = loanRepository.findByFinancialProduct_PublicId(loanPublicId)
+                .orElseThrow(() -> new LoanNotFoundException("Prestamo No." + loanPublicId + " no existe"));
+
+        List<LoanPayment> pendingInstallments = _loanPaymentService.getDueInstallmentsByLoanId(loan.getId());
+
+        //System.out.println(pendingInstallments);
+        BigDecimal roundedInterestRate = loan.getInterestRate()
+                .multiply(BigDecimal.valueOf(100))
+                .setScale(2, RoundingMode.HALF_UP);
+
+        loan.setInterestRate(roundedInterestRate);
+
+        Set<RelativeDTO> relatives = loan.getFinancialProduct()
+                .getRelatives()
+                .stream()
+                .map(r -> {
+                    return new RelativeDTO(r.getCustomerId(), r.getRelationCondition().toString());
+                }).collect(Collectors.toSet());
+
+        AmortizationTableDTO amortizationTableDTO = new AmortizationTableDTO(loan.getFinancialProduct().getProductNumber(), loan.getAmortizationTable().getItems());
+
+        if (loan.getAmortizationTable().getItems().isEmpty()) {
+            amortizationTableDTO = null;
+        }
+
+        List<TransactionDTO> transactions = loan.getFinancialProduct()
+                .getTransactions()
+                .stream()
+                .map(t ->
+                        new TransactionDTO(t.getAmount(),
+                                t.getBalanceAfter(),
+                                t.getType(),
+                                t.getDescription(),
+                                t.getReferenceId()))
+                .toList();
+
+        LoanDTO loanDto = LoanDTO.builder()
+                .number(loan.getFinancialProduct().getProductNumber())
+                .publicId(loan.getFinancialProduct().getPublicId())
+                .currency(loan.getCurrency())
+                .status(loan.getStatus())
+                .termInMonths(loan.getTermInMonths())
+                .paymentsMade(loan.getPaymentsMade())
+                .paymentsPending(loan.getPaymentsPending())
+                .principalAmount(loan.getPrincipalAmount())
+                .outstandingPrincipalBalance(loan.getOutstandingPrincipalAmount())
+                .availableAmountForDisbursement(loan.getAvailableAmountForDisbursement())
+                .interestBalance(loan.getInterestBalance())
+                .interestRate(loan.getInterestRate())
+                .installmentAmount(loan.getInstallmentAmount())
+                .transactions(transactions)
+                .pendingInstallments(pendingInstallments)
+                .amortizationTable(amortizationTableDTO)
+                .nextPaymentDate(loan.getNextPaymentDate())
+                .lastPaymentDate(loan.getLastPaymentDate())
+                .dueDate(loan.getDueDate())
+                .lastInterestRateReviewDate(loan.getLastInterestRateReviewDate())
+                .relatives(relatives)
+                .build();
+
+        return loanDto;
+    }
     @Transactional()
     public Loan createLoan(CreateLoanDto loanDto) {
 

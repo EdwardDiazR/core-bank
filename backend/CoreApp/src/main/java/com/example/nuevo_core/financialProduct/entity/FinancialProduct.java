@@ -30,6 +30,9 @@ public class FinancialProduct {
     @Column(name = "product_number", unique = true, nullable = false, length = 20)
     private String productNumber;
 
+    @Column(name = "public_id", unique = true,nullable = false)
+    private String publicId;
+
     @Column(name = "regional_product_number", unique = true, nullable = false,length = 35)
     private String regionalProductNumber = "";
 

@@ -1,6 +1,9 @@
+import { AmortizationTable } from "./AmortizationTable";
+
 export interface Loan {
   id: number;
-  productNumber: string;
+  number: string;
+  publicId: string;
   principalCustomerId: number;
   productType: "LOAN";
   createdAt: string;
@@ -50,22 +53,4 @@ export interface LoanRelative {
   principal: boolean;
 }
 
-export interface AmortizationTable {
-  id: number;
-  loanId: number;
-  item: AmortizationItem[];
-  active: boolean;
-}
 
-export interface AmortizationItem {
-  id: number;
-  installmentNumber: number;
-  cuota: number;
-  capital: number;
-  interes: number;
-  charges: number;
-  saldo: number;
-  paymentDate: string;
-  paidDate: string | null;
-  paid: boolean;
-}

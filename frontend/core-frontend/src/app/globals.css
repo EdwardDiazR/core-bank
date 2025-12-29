@@ -23,8 +23,27 @@ html, body {
   height: 100%;
 }
 body {
-  background: var(--background);
-  color: var(--foreground);
+  background: white;
+  color: black;
   font-family: Arial, Helvetica, sans-serif;
 }
 
+.navBarHeader{
+  display: flex;
+  background-color: #0077b6;
+  padding: 5px;
+ ul{
+    display: flex;
+    flex-direction: row;
+    gap: 10px;
+    color: white;
+
+    li{
+      cursor: pointer;
+
+      :hover{
+        color: red;
+      }
+    }
+  }
+}

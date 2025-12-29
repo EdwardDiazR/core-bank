@@ -1,0 +1,55 @@
+.searchBtn {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  border: none;
+  background-color: #ffb703;
+  border-radius: 5px;
+  color: white;
+  height: 2rem;
+  cursor: pointer;
+  transition: 0.1s ease-in-out;
+}
+
+.searchBtn:hover {
+  background-color: #e2e2e2;
+  color: #ffb703;
+}
+
+.searchProductForm {
+  display: flex;
+  flex-direction: column;
+  padding: 1rem;
+  gap: 10px;
+  border: none solid gray;
+
+  border-radius: 5px;
+  margin: 10px 0px;
+  box-shadow: 0 0px 6px rgba(0, 0, 0, 0.08), /* sombra principal más fuerte */ 0px 0px 15px rgba(0, 0, 0, 0.16); /* sombra secundaria suave */
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.searchProductForm input {
+  border: 1.3px solid black;
+  border-radius: 4px;
+  padding: 3px 5px;
+  height: 30px;
+}
+
+.searchProductForm label {
+  font-size: 1.1rem;
+}
+
+.searchResultItem {
+  display: flex;
+  justify-content: space-between;
+}
+
+.searchResultBtn {
+  color: #00b4d8;
+  cursor: pointer;
+}
+
+.searchResultBtn:hover {
+  text-decoration: underline;
+}
