@@ -1,24 +1,29 @@
 import { AmortizationTable } from "./AmortizationTable";
+import { LoanPayment } from "./LoanPayment";
+import { TransactionHistory } from "./TransactionHistory";
 
 export interface LoanDto {
   number: string;
+  type:string
   principalAmount: number;
   outstandingPrincipalBalance: number;
-  dueDate: Date;
+  dueDate: string;
   financialProduct: financialProduct;
   installmentAmount: number;
   interestBalance: number;
   interestRate: number;
-  nextPaymentDate: Date;
+  nextPaymentDate: string;
   paymentsMade: number;
   paymentsPending: number;
   status: string;
   currency: string;
   termInMonths: number;
-  lastPaymentDate:Date,
+  lastPaymentDate:string,
   availableAmountForDisbursement:number,
-  lastInterestRateReviewDate:Date
-  ,amortizationTable:AmortizationTable
+  lastInterestRateReviewDate:string,
+  amortizationTable:AmortizationTable
+  pendingInstallments:LoanPayment[]
+  ,transactions:TransactionHistory[]
 }
 
 export interface financialProduct {

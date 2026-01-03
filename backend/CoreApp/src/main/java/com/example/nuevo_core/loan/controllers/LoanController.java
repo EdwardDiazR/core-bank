@@ -10,6 +10,9 @@ import com.example.nuevo_core.loan.repository.LoanRepository;
 import com.example.nuevo_core.loan.interfaces.ILoanPaymentService;
 import com.example.nuevo_core.utils.ApiResponse;
 import com.example.nuevo_core.utils.ErrorResponseDTO;
+import jakarta.servlet.http.Cookie;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -20,12 +23,14 @@ import java.lang.reflect.Type;
 import java.math.BigDecimal;
 import java.net.URI;
 import java.time.LocalDateTime;
+import java.util.Arrays;
+import java.util.Optional;
 
 
 @Slf4j
 @RestController
 @RequestMapping("api/v1/loan")
-@CrossOrigin(origins = "*", methods = {RequestMethod.GET, RequestMethod.POST})
+@CrossOrigin(origins = "http://localhost:3000", methods = {RequestMethod.GET, RequestMethod.POST,RequestMethod.DELETE},allowCredentials = "true")
 public class LoanController {
 
     private final ILoanService _loanService;
@@ -40,8 +45,10 @@ public class LoanController {
     }
 
     @GetMapping("/search/{loanNumber}")
-    public ResponseEntity<ApiResponse> getLoanByNumber(@PathVariable("loanNumber") String number) {
+    public ResponseEntity<ApiResponse> getLoanByNumber( @PathVariable("loanNumber") String number,
+                                                        @CookieValue(name = "user_id", required = false) String userId) {
         ApiResponse response;
+
         try {
             LoanDTO loan = _loanService.getLoanByProductNumber(number);
             response = new ApiResponse(
@@ -79,9 +86,15 @@ public class LoanController {
         }
     }
 
+
+
     @GetMapping("/{loanPublicId}")
-    public ResponseEntity<ApiResponse> getLoanByPublicId(@PathVariable("loanPublicId") String loanPublicId) {
+    public ResponseEntity<ApiResponse> getLoanByPublicId(@PathVariable("loanPublicId") String loanPublicId,
+                                                         @CookieValue(name = "user_id", required = false) String userId
+    ) {
         ApiResponse response;
+
+        System.out.println(userId);
         try {
             LoanDTO loan = _loanService.getLoanByPublicId(loanPublicId);
             response = new ApiResponse(
@@ -90,7 +103,6 @@ public class LoanController {
                     HttpStatus.OK.value(),
                     loan,
                     LocalDateTime.now()
-
             );
 
             return ResponseEntity.ok(response);

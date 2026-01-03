@@ -6,6 +6,7 @@ export const metadata: Metadata = {
   title: "Buscar producto",
 };
 export default function page() {
+  
   return (
    <SearchProductPageView/>
   )

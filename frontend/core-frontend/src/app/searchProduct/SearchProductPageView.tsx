@@ -3,8 +3,16 @@
 import styles from "../searchProduct/page.module.css";
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
-import * as loanService from "@/services/loanService";
 import { Loan } from "@/models/Loan";
+import { loanService } from "@/services/loanService";
+import axios from "axios";
+import { log } from "console";
+
+type SearchProductResponse = {
+  productNumber: string;
+  publicId: string;
+  productType: string;
+};
 
 export default function SearchProductPageView() {
   const router = useRouter();
@@ -13,9 +21,12 @@ export default function SearchProductPageView() {
   const [customerCode, setcustomerCode] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [financialProducts, setFinancialProducts] = useState<Loan[]>([]);
+  const [financialProducts, setFinancialProducts] = useState<SearchProductResponse[]>([]);
 
+
+  
   const onSearch = async (e: React.FormEvent) => {
+
     e.preventDefault();
     setError(null);
 
@@ -27,25 +38,36 @@ export default function SearchProductPageView() {
 
     try {
       setLoading(true);
+      const url = `http://localhost:8094/api/financial-product/${productNumber}`;
 
-      const response = await loanService.getLoanByNumber(productNumber);
-      const publicId = response.data.data.publicId;
+      const response = await axios.get<SearchProductResponse[]>(url);
 
-      if (!publicId) {
-        throw new Error("Producto sin identificador público");
+      setFinancialProducts(response.data);
+      setError(null);
+
+      if (response.status == 200 && !response.data.length) {
+        setError("No se encontraron resultados con tu busqueda");
       }
-
-      if (financialProducts.length) {
-        setFinancialProducts([]);
-      }
-      financialProducts.push(response.data.data);
-
-      // 👉 navegación segura con ID opaco
-      //router.push(`/loan/${publicId}`);
     } catch (err: unknown) {
-      setError("No se encontró el producto");
     } finally {
       setLoading(false);
+    }
+  };
+
+  const goToProductView = (financialProduct: SearchProductResponse) => {
+    if (!financialProduct.publicId.length) {
+      alert("Ha ocurrido un error al consultar este producto");
+    }
+
+    switch (financialProduct.productType.toUpperCase()) {
+      case "LOAN":
+        router.push(`loan/${financialProduct.publicId}`);
+        break;
+
+      default:
+        alert("Hay que implementar esta vista");
+        console.log("todo: hay que configurar esta vista");
+        break;
     }
   };
 
@@ -82,37 +104,42 @@ export default function SearchProductPageView() {
         {/* {error && <p className="error">{error}</p>} */}
       </form>
 
-      <h2>Resultados de busqueda:</h2>
-      <table>
-        <thead>
-          <tr>
-            <th>No. Producto</th>
-            <th>Estatus</th>
-             <th>Condicion de firma</th>
-          </tr>
-        </thead>
-        <tbody>
-          {financialProducts.map((fp, i) => {
-            return (
-              <tr key={i} className={styles.searchResultItem} onClick={() => router.push(`loan/${fp.publicId}`)}>
-                <td>
-                  <button className={styles.searchResultBtn} onClick={() => router.push(`loan/${fp.publicId}`)}>
-                    {fp.number}
-                  </button>
-                </td>
-                <td>
-                  <span>{fp.status}</span>
-                </td>
-
-                 <td>
-                  <span>{fp.signType}</span>
-                </td>
+      {!loading && !error != null && financialProducts.length>0 && (
+        <>
+           <h2 className="text-xl font-bold text-black">
+            Resultados
+          </h2>
+          <table className="min-w-full border-collapse">
+            <thead className="sticky top-0 bg-gray-100 z-10">
+              <tr>
+                <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-600">
+                  No. producto
+                </th>
+                <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-600">
+                  Tipo
+                </th>
               </tr>
-            );
-          })}
-        </tbody>
-      </table>
-      <ul></ul>
+            </thead>
+
+            <tbody className="divide-y divide-gray-200 bg-red ">
+              {financialProducts?.map((item, index) => (
+                <tr
+                  key={index}
+                  className="hover:bg-blue-50 transition-colors cursor-pointer"
+                  onClick={() => {
+                    goToProductView(item);
+                  }}
+                >
+                  <td className="clickeableBtn tableCell">{item.productNumber}</td>
+                  <td className="tableCell">{item.productType}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </>
+      )}
+
+      {!loading && error && <h2>{error}</h2>}
     </div>
   );
 }

@@ -4,6 +4,7 @@ import com.example.nuevo_core.financialProduct.constants.AccountSignType;
 import com.example.nuevo_core.financialProduct.constants.ProductType;
 import com.example.nuevo_core.financialProduct.dto.CreateAccountRelativeDTO;
 import com.example.nuevo_core.financialProduct.dto.CreateFinancialProductDTO;
+import com.example.nuevo_core.financialProduct.dto.SearchFinancialProductResponse;
 import com.example.nuevo_core.financialProduct.entity.FinancialProductRelative;
 import com.example.nuevo_core.financialProduct.entity.FinancialProduct;
 import com.example.nuevo_core.financialProduct.exceptions.DuplicatedRelativeException;
@@ -154,5 +155,10 @@ public class financialProductServiceImpl implements FinancialProductService {
     @Override
     public void closeProduct(Long id) {
 
+    }
+
+    @Override
+    public Set<SearchFinancialProductResponse> findFinancialProductByNumber(String searchValue){
+        return _repository.getFinancialProductSearchResult(searchValue);
     }
 }

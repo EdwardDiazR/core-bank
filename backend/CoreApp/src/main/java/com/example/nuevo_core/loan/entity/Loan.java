@@ -63,7 +63,6 @@ public class Loan {
     private BigDecimal interestBalance;
 
 
-
     @Column(name = "interest_rate", precision = 12, scale = 10)
     private BigDecimal interestRate;
 
@@ -133,6 +132,10 @@ public class Loan {
     @Column(name = "last_interest_rate_review_date")
     @Nullable
     private LocalDateTime lastInterestRateReviewDate;
+
+//    @Column(name = "next_interest_rate_review_date")
+//    @Nullable
+//    private LocalDateTime nextInterestRateReviewDate;
 
     @Column(name = "due_date")
     @Nullable

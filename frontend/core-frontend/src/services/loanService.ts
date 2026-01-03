@@ -1,11 +1,15 @@
-import axios from "axios";
 
-const BASE_URL = "http://localhost:8094/api/v1/loan";
-export const getLoanByNumber = (loanNumber: string) => {
-  return axios.get(`${BASE_URL}/search/${loanNumber}`);
+import { http } from "./http";
+
+const BASE_URL = "/api/loan";
+
+export const loanService = {
+  getLoanByNumber: async (loanNumber: string) => {
+    return await http.get(`/api/loan/search/${loanNumber}`);
+  },
+
+  getLoanByPublicId: async (loanPublicId: string) => {
+    console.log("BY PUBLICID")
+    return await http.get(`/api/loan/${loanPublicId}`);
+  },
 };
-
-export const getLoanByPublicId = (loanPublicId: string) => {
-  return axios.get(`${BASE_URL}/${loanPublicId}`);
-};
-

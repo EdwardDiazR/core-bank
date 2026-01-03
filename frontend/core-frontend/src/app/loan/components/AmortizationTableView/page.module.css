@@ -1,0 +1,21 @@
+.generatePdfBtn{
+    display: flex;
+    border-radius:6px;
+    padding: 2px 8px;
+    background-color: #F57C00;
+    color: white;
+    cursor: pointer;
+    transition: 0.10s;
+    font-size: 0.9rem;
+}
+
+.generatePdfBtn:hover{
+    background-color: #E6F0FF;
+    color: #F57C00;
+}
+
+.pdfHeader{
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}

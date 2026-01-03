@@ -26,7 +26,8 @@ public class LoanDTO {
     private String number;
     private String publicId;
     private String currency;
-
+    private final String productType = "LOAN";
+    private String type;
     private LoanStatus status;
     private int termInMonths;
     private int paymentsMade;
@@ -54,9 +55,10 @@ public class LoanDTO {
     LocalDateTime lastInterestRateReviewDate;
 
 
-
     /*Customer information*/
     Set<RelativeDTO> relatives;
+
+
 
 
 }

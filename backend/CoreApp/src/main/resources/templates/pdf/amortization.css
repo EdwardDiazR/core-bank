@@ -1,0 +1,110 @@
+@page {
+  size: Letter;
+  margin: 10mm;
+}
+
+/* BASE */
+body {
+    font-family: Arial, Helvetica, sans-serif;
+  font-size: 10pt;
+  color: #1f2937;
+}
+
+/* HEADER */
+.header {
+  border-bottom: 3px solid #F57C00;
+  margin-bottom: 16px;
+  padding-bottom: 10px;
+}
+
+.brand {
+  text-align: center;
+}
+
+.bank-name {
+  color: #003A8F;
+  font-size: 14pt;
+  font-weight: bold;
+  letter-spacing: 1px;
+
+}
+
+.doc-title {
+  color: #003A8F;
+  font-size: 12pt;
+  margin-top: 4px;
+
+}
+
+.header-table {
+  width: 100%;
+  table-layout: fixed; /* 👈 MUY IMPORTANTE */
+  border-collapse: collapse;
+}
+
+.header-left {
+  width: 60%;
+  text-align: left;
+}
+
+.header-right {
+  width: 40%;
+  text-align: right;
+  vertical-align: top;
+}
+
+.label {
+  color: #6B7C93;
+  font-size: 8pt;
+}
+
+.value {
+  color: #003A8F;
+  font-weight: bold;
+  margin-left: 4px;
+}
+
+/* TABLE */
+.amortization-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 10px;
+}
+
+.amortization-table thead {
+  background-color: #E6F0FF;
+}
+
+.amortization-table th {
+  padding: 8px 10px;
+  text-align: center;
+  font-weight: bold;
+  color: #003A8F;
+  border-bottom: 2px solid #003A8F;
+}
+
+.amortization-table td {
+  padding: 7px 10px;
+  border-bottom: 1px solid #E0E6ED;
+    text-align: center;
+
+}
+
+.amortization-table tbody tr:nth-child(even) {
+  background-color: #F9FBFF;
+}
+
+.amortization-table td.right,
+.amortization-table th.right {
+  text-align: center;
+}
+
+/* FOOTER */
+.footer {
+  position: fixed;
+  bottom: 10mm;
+  width: 100%;
+  text-align: center;
+  font-size: 8pt;
+  color: #6B7C93;
+}

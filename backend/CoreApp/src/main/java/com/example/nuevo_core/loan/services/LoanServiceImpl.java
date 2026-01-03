@@ -50,7 +50,6 @@ public class LoanServiceImpl implements ILoanService {
     private final FinancialProductService _financialProductService;
     private final LoanPaymentServiceImpl _loanPaymentService;
 
-
     public LoanServiceImpl(@Lazy IAmortizationService amortizationService,
                            LoanRepository repository,
                            FinancialProductService financialProductService,
@@ -102,7 +101,7 @@ public class LoanServiceImpl implements ILoanService {
                                 t.getBalanceAfter(),
                                 t.getType(),
                                 t.getDescription(),
-                                t.getReferenceId()))
+                                t.getReferenceId(), t.getEntryDate()))
                 .toList();
 
         LoanDTO loanDto = LoanDTO.builder()
@@ -165,10 +164,10 @@ public class LoanServiceImpl implements ILoanService {
                 .stream()
                 .map(t ->
                         new TransactionDTO(t.getAmount(),
-                                t.getBalanceAfter(),
+                                t.getBalanceAfter().negate(),
                                 t.getType(),
                                 t.getDescription(),
-                                t.getReferenceId()))
+                                t.getReferenceId(), t.getEffectiveDate()))
                 .toList();
 
         LoanDTO loanDto = LoanDTO.builder()
@@ -176,6 +175,7 @@ public class LoanServiceImpl implements ILoanService {
                 .publicId(loan.getFinancialProduct().getPublicId())
                 .currency(loan.getCurrency())
                 .status(loan.getStatus())
+                .type(loan.getType())
                 .termInMonths(loan.getTermInMonths())
                 .paymentsMade(loan.getPaymentsMade())
                 .paymentsPending(loan.getPaymentsPending())
@@ -197,6 +197,11 @@ public class LoanServiceImpl implements ILoanService {
 
         return loanDto;
     }
+
+    public void updateNextPaymentDate(LocalDate date) {
+
+    }
+
     @Transactional()
     public Loan createLoan(CreateLoanDto loanDto) {
 
@@ -251,8 +256,8 @@ public class LoanServiceImpl implements ILoanService {
                 .twoCycleTimes(0)
                 .paymentsMade(0)
                 .paymentsPending(loanDto.termInMonths())
-                .firstPaymentDate(null)
-                .nextPaymentDate(null)
+                .firstPaymentDate(loanDto.firstPaymentDate())
+                .nextPaymentDate(loanDto.firstPaymentDate()) //Check
                 .lastPaymentDate(null)
                 .lastInterestBalanceUpdateDate(null)
                 .disbursementDate(null)
@@ -267,8 +272,6 @@ public class LoanServiceImpl implements ILoanService {
 
         // loan.getFinancialProduct().addRelatives(loanDto.relateds());
         loanRepository.save(loan);
-
-
         //todo: if is line of credit, set available amount for disbursement, after check if revol is active
 
         AmortizationTable amortizationTable = _amortizationService.generateAmortizationTable(
@@ -276,10 +279,12 @@ public class LoanServiceImpl implements ILoanService {
                 cuota,
                 loanDto.amount(),
                 interestRate,
-                loanDto.termInMonths(), 12);
+                loanDto.termInMonths(), 12,
+                loanDto.firstPaymentDate());
 
-        loan.setAmortizationTable(amortizationTable);
-
+        if (amortizationTable != null) {
+            loan.setAmortizationTable(amortizationTable);
+        }
         log.info("loan created: loanId={}", loan.getId());
         return loan;
 

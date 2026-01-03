@@ -19,6 +19,7 @@ import com.example.nuevo_core.transaction.constants.TransactionType;
 import com.example.nuevo_core.transaction.dto.CreateAccountTxDto;
 import com.example.nuevo_core.transaction.dto.CreateTransactionDto;
 import com.example.nuevo_core.transaction.interfaces.ITransactionService;
+import jakarta.annotation.Nullable;
 import jakarta.persistence.EntityManager;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -29,9 +30,7 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.List;
+import java.util.*;
 
 @Slf4j
 @Service
@@ -127,8 +126,7 @@ public class LoanPaymentServiceImpl implements ILoanPaymentService {
         List<LoanPayment> dueInstallments = getDueInstallmentsByLoanId(loan.getId());
         List<LoanCharge> dueCharges = getDueChargesByLoanId(loan.getId());
 
-        Long referenceId = _transactionService.generateReferenceId();
-        processPayment(dueInstallments, dueCharges, loan, payLoanDto.amount(), payLoanDto.source(), referenceId);
+        processPayment(dueInstallments, dueCharges, loan, payLoanDto.amount(), payLoanDto.source(), null);
     }
 
     @Transactional
@@ -180,10 +178,22 @@ public class LoanPaymentServiceImpl implements ILoanPaymentService {
                                Loan loan,
                                BigDecimal amountToPay,
                                String paymentSource,
-                               Long transactionReferenceId) {
+                               @Nullable Long transactionReferenceId) {
         try {
             LocalDateTime now = LocalDateTime.now();
             BigDecimal remainingBalance = amountToPay;
+            BigDecimal totalDue = installments.stream()
+                    .map(LoanPayment::getPendingInstallmentBalance)
+                    .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+            if (totalDue.compareTo(remainingBalance) < 0) {
+                throw new IllegalArgumentException("Monto pagado no puede ser mayor al adeudado");
+            }
+
+            if(installments.isEmpty()){
+                throw new IllegalArgumentException("No hay pagos pendientes");
+
+            }
 
             //Pay charges first
             if (!charges.isEmpty()) {
@@ -200,8 +210,15 @@ public class LoanPaymentServiceImpl implements ILoanPaymentService {
                 }
             }
 
+
             //Pay installments
             for (LoanPayment installment : installments) {
+                //todo: resetear el reference id,
+                // porque despues del primer loop
+                // ya no es null e intenta usar
+                // el mismo asignado anteriormente
+
+                Long txReferenceId = transactionReferenceId != null && installments.size() == 1 ? transactionReferenceId :  _transactionService.generateReferenceId();
                 BigDecimal installmentPending = installment.getPendingInstallmentBalance();
 
                 BigDecimal interestPending = installment
@@ -247,17 +264,18 @@ public class LoanPaymentServiceImpl implements ILoanPaymentService {
                 installment.setPaid(installment.getStatus() == PaymentStatus.PAID);
 
                 installment.setLastPaymentDate(now);
-                LocalDate nextPaymentDate = getNextPaymentDateByLoan(loan);
 
-                if (nextPaymentDate != null) {
-                    loan.setNextPaymentDate(nextPaymentDate);
-                }
 
                 BigDecimal totalPaid = outstandingPrincipalPayment.add(interestPayment);
 
-                if (totalPaid.equals(installmentPending)) {
-                    loan.setPaymentsMade(loan.getPaymentsMade() + 1);
-                    loan.setPaymentsPending((loan.getPaymentsPending() - 1));
+                if (installmentPending.compareTo(BigDecimal.ZERO) == 0) {
+                    if(loan.getPaymentsMade().compareTo(loan.getTermInMonths()) < 0) {
+                        loan.setPaymentsMade(loan.getPaymentsMade() + 1);
+                    }
+                    if (loan.getPaymentsPending() > 0) {
+                        loan.setPaymentsPending(loan.getPaymentsPending() - 1);
+                    }
+
                 }
 
                 loan.setTotalInstallmentBalance(loan.getTotalInstallmentBalance().subtract(totalPaid));
@@ -270,26 +288,38 @@ public class LoanPaymentServiceImpl implements ILoanPaymentService {
 
                 //todo: save updated amortizationItem
                 String LoanTransactionDesc = String.format("PAGO CUOTA %s",
-                        installment.getDueDate().format(DateTimeFormatter.ofPattern("MMMM-yyyy")));
+                        installment.getDueDate()
+                                .format(DateTimeFormatter
+                                        .ofPattern("MMM-yy", new Locale("es", "DO"))));
 
                 CreateTransactionDto tdto = new CreateTransactionDto(
-                        LoanTransactionDesc,
+                        LoanTransactionDesc.toUpperCase(),
                         totalPaid,
                         TransactionType.CREDIT,
                         "bank",
                         TransactionStatus.COMPLETED,
                         TransactionCategory.PAYMENT,
                         loan.getFinancialProduct(),
-                        transactionReferenceId,
+                        txReferenceId,
                         loan.getOutstandingPrincipalAmount(),
                         loan.getCurrency()
                 );
                 _amortizationItemRepo.save(amortizationItem);
+
+                LocalDate nextPaymentDate = getNextPaymentDateByLoan(loan);
+
+                if (nextPaymentDate != null) {
+                    loan.setNextPaymentDate(nextPaymentDate);
+                }else{
+                    loan.setNextPaymentDate(loan.getDueDate());
+                }
                 //todo: update payments made and pending by amort item where isPaid and !isPaid
                 _loanRepository.save(loan);
                 _loanPaymentRepository.save(installment);
                 _transactionService.createTransaction(tdto);
                 log.info("Pago realizado correctamente Prest. No.: {} ", loan.getId());
+
+                txReferenceId = null;
 
                 if (remainingBalance.compareTo(BigDecimal.ZERO) > 0) {
                     //logic to do with remaining balance
@@ -298,6 +328,7 @@ public class LoanPaymentServiceImpl implements ILoanPaymentService {
                     break;
                 }
             }
+
         } catch (Exception e) {
             log.error("ROLLBACK CAUSE → {}", e.getClass().getName());
             log.error("MESSAGE → {}", e.getMessage());
@@ -330,11 +361,11 @@ public class LoanPaymentServiceImpl implements ILoanPaymentService {
 
     public LocalDate getNextPaymentDateByLoan(Loan loan) {
 
-        return _amortizationService.getAmortizationTableByLoan(loan).getItems()
-                .stream()
-                .filter(i -> !i.isPaid()) // solo cuotas no pagadas
-                .min(Comparator.comparing(AmortizationTableItem::getPaymentDate)) // la más próxima
-                .orElse(null)
+        return Objects.requireNonNull(_amortizationService.getAmortizationTableByLoan(loan).getItems()
+                        .stream()
+                        .filter(i -> !i.isPaid()) // solo cuotas no pagadas
+                        .min(Comparator.comparing(AmortizationTableItem::getPaymentDate)) // la más próxima
+                        .orElse(null))
                 .getPaymentDate();
     }
 

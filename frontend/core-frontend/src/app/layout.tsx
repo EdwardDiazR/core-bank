@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import NavBar from "./shared/NavBar";
+import axios from "axios";
+import { log } from "console";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -23,13 +25,22 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const isAuth = true;
+
+
+
+
   return (
     <html lang="en">
-      <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
-        <header >
-          <NavBar />
-        </header>
-        {children}
+      <body className={`h-screen overflow-hidden ${geistSans.variable} ${geistMono.variable} antialiased`}>
+        <div className="flex flex-col h-full">
+          {isAuth && (
+            <header className="shrink-0 bg-white z-50">
+              <NavBar />
+            </header>
+          )}
+          <div className="flex-1 h-full overflow-hidden ">{children}</div>
+        </div>
       </body>
     </html>
   );

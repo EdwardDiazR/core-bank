@@ -5,6 +5,7 @@ import com.example.nuevo_core.financialProduct.constants.AccountSignType;
 import com.example.nuevo_core.financialProduct.dto.CreateAccountRelativeDTO;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.util.Set;
 
     public record CreateLoanDto(BigDecimal amount,
@@ -14,6 +15,7 @@ import java.util.Set;
                                 Set<CreateAccountRelativeDTO> relatives,
                                 String type,
                                 String currency,
-                                AccountSignType signType) {
+                                AccountSignType signType,
+                                LocalDate firstPaymentDate) {
 
 }

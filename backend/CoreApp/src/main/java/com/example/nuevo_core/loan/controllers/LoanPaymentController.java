@@ -49,4 +49,10 @@ public class LoanPaymentController {
         _paymentService.autoPayLoan(loanId);
         return ResponseEntity.ok("Autpay executed");
     }
+
+    @PostMapping("generate-invoices")
+    public ResponseEntity<String> generateInvoices(){
+        _paymentService.generateLoanPaymentInvoices();
+        return ResponseEntity.ok("Payments generated");
+    }
 }

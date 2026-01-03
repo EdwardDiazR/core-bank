@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8"/>
+    <title>Tabla de Amortización</title>
+    <link rel="stylesheet" href="amortization.css"/>
+</head>
+
+<body>
+
+<!-- HEADER -->
+<header class="header">
+    <table class="header-table">
+        <tr>
+            <!-- IZQUIERDA -->
+            <td class="header-left">
+                <div class="bank-name">BANCO <SIMULADO></SIMULADO></div>
+                <div class="doc-title">Tabla de Amortización</div>
+            </td>
+
+            <!-- DERECHA -->
+            <td class="header-right">
+                <div>
+                    <span class="label">Préstamo No.</span>
+                    <span class="value" th:text="${loanNumber}">LN-0001</span>
+                </div>
+                <div>
+                    <span class="label">Fecha</span>
+                    <span class="value" th:text="${fecha}">01/01/2025</span>
+                </div>
+            </td>
+        </tr>
+    </table>
+</header>
+
+
+<!-- TABLE -->
+<table class="amortization-table">
+    <thead>
+    <tr>
+        <th class="right">No. Cuota</th>
+        <th class="right">Fecha de Pago</th>
+        <th class="right">Monto Cuota</th>
+        <th class="right">Capital</th>
+        <th class="right">Interés</th>
+        <th class="right">Saldo</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    <tr th:each="item : ${rows}">
+        <td th:text="${item.installmentNumber}">1</td>
+
+        <td th:text="${#temporals.format(item.paymentDate, 'dd/MM/yyyy')}">
+            01/01/2025
+        </td>
+
+        <td class="right" th:text="${#numbers.formatDecimal(item.cuota, 1, 'COMMA', 2, 'POINT')}">
+            1,500.00
+        </td>
+
+        <td class="right" th:text="${#numbers.formatDecimal(item.capital, 1, 'COMMA', 2, 'POINT')}">
+            1,200.00
+        </td>
+
+        <td class="right" th:text="${#numbers.formatDecimal(item.interes, 1, 'COMMA', 2, 'POINT')}">
+            300.00
+        </td>
+
+        <td class="right" th:text="${#numbers.formatDecimal(item.saldo, 1, 'COMMA', 2, 'POINT')}">
+            25,000.00
+        </td>
+    </tr>
+    </tbody>
+</table>
+
+<!-- FOOTER -->
+<!--<footer class="footer">
+    Documento generado automáticamente · Uso interno
+</footer>-->
+
+</body>
+</html>

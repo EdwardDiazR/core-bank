@@ -5,7 +5,7 @@ export interface Loan {
   number: string;
   publicId: string;
   principalCustomerId: number;
-  productType: "LOAN";
+  productType: string;
   createdAt: string;
   closedAt: string | null;
   signType: string;

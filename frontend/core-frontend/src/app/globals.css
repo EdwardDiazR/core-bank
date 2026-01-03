@@ -21,6 +21,7 @@
 
 html, body {
   height: 100%;
+
 }
 body {
   background: white;
@@ -30,8 +31,8 @@ body {
 
 .navBarHeader{
   display: flex;
-  background-color: #0077b6;
-  padding: 5px;
+  background-color: #003A8F;
+  padding: 10px 5px;
  ul{
     display: flex;
     flex-direction: row;
@@ -46,4 +47,22 @@ body {
       }
     }
   }
+}
+
+.clickeableBtn{
+
+  color: #003A8F !important;
+  
+}
+
+.clickeableBtn:hover {
+  text-decoration: underline;
+  color: #1E5DB5 !important;
+}
+
+.tableCell {
+  cursor: pointer;
+  padding: 0.5rem 1rem;
+  font-size: 0.875rem;
+  color: #1f2937;
 }

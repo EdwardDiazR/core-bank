@@ -9,6 +9,7 @@ import jakarta.annotation.Nullable;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Builder
@@ -31,13 +32,13 @@ public class AmortizationTable {
     @OneToMany(mappedBy = "amortizationTable",
             cascade = CascadeType.ALL,
             orphanRemoval = true, fetch = FetchType.EAGER)
-    private List<AmortizationTableItem> items;
+    private List<AmortizationTableItem> items = new ArrayList<>();
 
     //@OneToMany(mappedBy = "loan", cascade = CascadeType.ALL, orphanRemoval = true)
     @Nullable
     @JsonIgnore
     @Transient
-    private List<LoanPayment> payments;
+    private List<LoanPayment> payments = new ArrayList<>();
 
     @Convert(converter = BooleanToNumberConverter.class)
     @Column(name = "is_active")
