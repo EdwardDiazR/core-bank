@@ -5,21 +5,21 @@ import axios from "axios";
 import React, { useState } from "react";
 import styles from "./page.module.css";
 import IframeModal from "./IframeModal";
+import { useLoan } from "../../LoanContext";
 
-type Props = {
-  amortizationTable: AmortizationTable;
-  currency: string;
-  loanId: string;
-};
 
-export const AmortizationTableView = ({ amortizationTable, currency, loanId }: Props) => {
-  const publicId = loanId;
-  const amortizationTableUrl = `http://localhost:8094/loan/amortization/${loanId}/pdf`;
-  const [blobPdfUrl, setBlobPdfUrl] = useState<string>("");
+export const AmortizationTableView = () => {
+
+  const loan = useLoan();
+  const currency = loan.currency;
+  const publicId = loan.publicId;
+
+  const amortizationTableUrl = `http://localhost:8094/loan/amortization/${loan.publicId}/pdf`;
+  const [blobPdfUrl, setBlobPdfUrl] = useState<string|null>(null);
 
   const generateTablePdf = async () => {
     // window.open(amortizationTableUrl, "_blank");
-    if (!blobPdfUrl.length) {
+    if (!blobPdfUrl?.length) {
       const response = await fetch(`http://localhost:8094/loan/amortization/${publicId}/pdf`);
       const blob = await response.blob();
       setBlobPdfUrl(URL.createObjectURL(blob));
@@ -32,6 +32,7 @@ export const AmortizationTableView = ({ amortizationTable, currency, loanId }: P
       <div className={`py-2  ${styles.pdfHeader}`}>
         <h2>Tabla de amortizacion</h2>
         <div className="flex justify-end">
+          
           <IframeModal buttonLabel="Generar pdf" src={blobPdfUrl} generate={generateTablePdf} />
           {/* <button onClick={generateTablePdf} className={styles.generatePdfBtn}>
             Generar PDF
@@ -65,7 +66,7 @@ export const AmortizationTableView = ({ amortizationTable, currency, loanId }: P
           </thead>
 
           <tbody className="divide-y divide-gray-200 bg-white">
-            {amortizationTable?.items?.map((item, index) => (
+            {loan.amortizationTable?.items?.map((item, index) => (
               <tr key={index} className="hover:bg-blue-50 transition-colors cursor-pointer">
                 <td className="px-4 py-2 text-sm text-gray-800">{item.installmentNumber}</td>
                 <td className="px-4 py-2 text-sm text-gray-800">{item.paymentDate.toLocaleString()}</td>

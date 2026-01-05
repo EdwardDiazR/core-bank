@@ -3,7 +3,7 @@ import React, { useState } from "react";
 import styles from "./page.module.css";
 
 interface IframeModalProps {
-  src: string;
+  src?: string|null;
   title?: string;
   buttonLabel?: string;
   generate: () => void;
@@ -30,7 +30,7 @@ export default function IframeModal({
         {buttonLabel}
       </button>
 
-      {isOpen && (
+      {isOpen && src && (
         <div className="fixed inset-0 z-[9999] flex items-center justify-center">
           {/* Overlay oscuro + blur */}
           <div onClick={() => setIsOpen(false)} className="absolute inset-0 bg-black/60 backdrop-blur-md"></div>

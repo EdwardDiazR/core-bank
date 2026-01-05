@@ -30,7 +30,7 @@ import java.util.Optional;
 @Slf4j
 @RestController
 @RequestMapping("api/v1/loan")
-@CrossOrigin(origins = "http://localhost:3000", methods = {RequestMethod.GET, RequestMethod.POST,RequestMethod.DELETE},allowCredentials = "true")
+    @CrossOrigin(origins = "http://localhost:3000", methods = {RequestMethod.GET, RequestMethod.POST,RequestMethod.DELETE},allowCredentials = "true")
 public class LoanController {
 
     private final ILoanService _loanService;

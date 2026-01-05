@@ -4,10 +4,10 @@ import com.example.nuevo_core.loan.interfaces.ILoanInterestService;
 import com.example.nuevo_core.loan.interfaces.ILoanService;
 import com.example.nuevo_core.loan.entity.Loan;
 import com.example.nuevo_core.loan.repository.LoanRepository;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
@@ -15,13 +15,15 @@ import java.util.List;
 @Service
 public class LoanInterestService implements ILoanInterestService {
 
+    private static final BigDecimal DAYS_IN_YEAR = new BigDecimal(360);
+
     private final ILoanService _loanService;
-    @Autowired
-    private LoanRepository loanRepository;
+    private final LoanRepository loanRepository;
 
     private LocalDateTime today = LocalDateTime.now();
 
-    public LoanInterestService(ILoanService loanService) {
+    public LoanInterestService(ILoanService loanService, LoanRepository loanRepository) {
+        this.loanRepository = loanRepository;
         _loanService = loanService;
     }
 
@@ -42,16 +44,23 @@ public class LoanInterestService implements ILoanInterestService {
         long daysToAccrue = ChronoUnit.DAYS.between(lastInterestAccruedDate, today.toLocalDate());
 
         if (daysToAccrue > 0) {
+
+            BigDecimal outstandingBalance = loan.getOutstandingPrincipalAmount();
+            BigDecimal interestRate = loan.getInterestRate();
+
+            BigDecimal dailyInterest = outstandingBalance
+                    .multiply(interestRate)
+                    .divide(DAYS_IN_YEAR, RoundingMode.HALF_UP);
+
             BigDecimal interestBalance = loan.getInterestBalance();
             BigDecimal dailyInterestFactor = loan.getDailyInterestFactor();
 
             //Total to add, based on days from last accrual
-            BigDecimal totalToAdd = dailyInterestFactor.multiply(new BigDecimal(daysToAccrue));
+            BigDecimal totalToAdd = dailyInterest.multiply(new BigDecimal(daysToAccrue));
 
             loan.setInterestBalance(interestBalance.add(totalToAdd));
             loan.setLastInterestBalanceUpdateDate(today);
             // loanRepository.save(loan);
         }
     }
-
 }

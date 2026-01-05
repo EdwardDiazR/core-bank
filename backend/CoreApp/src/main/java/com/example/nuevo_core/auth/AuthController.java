@@ -4,6 +4,8 @@ import com.github.f4b6a3.ulid.UlidCreator;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -11,7 +13,9 @@ import java.util.Arrays;
 
 @RestController
 @RequestMapping("auth")
-@CrossOrigin(origins = "http://localhost:3000", methods = {RequestMethod.GET, RequestMethod.POST,RequestMethod.DELETE},allowCredentials = "true")
+@CrossOrigin(origins = "http://localhost:3000",
+        methods = {RequestMethod.GET, RequestMethod.POST,RequestMethod.DELETE},
+        allowCredentials = "true")
 public class AuthController {
 
     public AuthController (){
@@ -19,18 +23,18 @@ public class AuthController {
     }
 
     @PostMapping("/set-cookie")
-    public ResponseEntity<String> setCookie(HttpServletResponse response){
+    public void setCookie(HttpServletResponse response){
         System.out.println("👉 Entró al endpoint set-cookie");
 
-        Cookie cookie = new Cookie("user_id","EMP1234");
-        cookie.setHttpOnly(true);
-        cookie.setSecure(false); // true SOLO en HTTPS
-        cookie.setPath("/");
-        cookie.setMaxAge(3600);
-        // Spring 6+
-        response.addCookie(cookie);
+        ResponseCookie cookie = ResponseCookie.from("user_id", "EMP1234")
+                .httpOnly(true)
+                .secure(false) // true SOLO si usas HTTPS
+                .path("/")
+                .maxAge(3600)
+                .sameSite("Lax") // 👈 CLAVE
+                .build();
 
-        return ResponseEntity.ok("OK");
+        response.addHeader(HttpHeaders.SET_COOKIE, cookie.toString());
     }
 
     @GetMapping("/get-cookie")

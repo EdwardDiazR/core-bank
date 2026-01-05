@@ -9,16 +9,8 @@ export async function GET(req: Request, { params }: { params: { loanPublicId: st
   const cookieStore = cookies();
   const userId = (await cookieStore).get("user_id")?.value;
   console.log(userId);
-  // ;(await cookies()).delete("test")
   console.log((await cookies()).getAll());
-  // if (!userId) {
-  //     console.log("aquii")
 
-  //   return NextResponse.json(
-  //     { message: "Usuario no autenticado" },
-  //     { status: 401 }
-  //   );
-  // }
 
   console.log("➡️ Entró al API loan/[id]");
   console.log("PublicId:", loanPublicId);

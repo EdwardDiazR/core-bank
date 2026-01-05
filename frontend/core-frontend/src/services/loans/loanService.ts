@@ -1,5 +1,5 @@
 
-import { http } from "./http";
+import { http } from "../http";
 
 const BASE_URL = "/api/loan";
 

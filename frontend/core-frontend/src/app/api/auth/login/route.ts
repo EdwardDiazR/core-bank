@@ -3,7 +3,7 @@ import { NextResponse } from "next/server";
 
 export async function GET() {
   const response = await axios.post("http://localhost:8094/auth/set-cookie", {}, { withCredentials: true });
-  console.log(response.data);
+  console.log(response);
 
   return NextResponse.json(response.data);
 }

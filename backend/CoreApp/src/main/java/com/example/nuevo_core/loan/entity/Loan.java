@@ -28,6 +28,7 @@ import java.util.List;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
+
 public class Loan {
 
     @Id

@@ -1,12 +1,13 @@
 "use client";
 
-import styles from "../searchProduct/page.module.css";
-import React, { useState } from "react";
+import styles from "../search-product/page.module.css";
+import React, { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Loan } from "@/models/Loan";
-import { loanService } from "@/services/loanService";
+import { loanService } from "@/services/loans/loanService";
 import axios from "axios";
 import { log } from "console";
+import { clearSelectedLoan, selectLoan } from "@/services/loans/loan.actions";
 
 type SearchProductResponse = {
   productNumber: string;
@@ -24,6 +25,9 @@ export default function SearchProductPageView() {
   const [financialProducts, setFinancialProducts] = useState<SearchProductResponse[]>([]);
 
 
+  useEffect(()=>{
+    clearSelectedLoan()
+  },[])
   
   const onSearch = async (e: React.FormEvent) => {
 
@@ -55,13 +59,16 @@ export default function SearchProductPageView() {
   };
 
   const goToProductView = (financialProduct: SearchProductResponse) => {
-    if (!financialProduct.publicId.length) {
-      alert("Ha ocurrido un error al consultar este producto");
+
+    selectLoan(financialProduct.publicId)
+    
+    if (!financialProduct.publicId) {
+      alert("Ha ocurrido un error al consultar este producto: [No tiene PublicID]"); //BORRAR ESTO EN PROD
     }
 
     switch (financialProduct.productType.toUpperCase()) {
       case "LOAN":
-        router.push(`loan/${financialProduct.publicId}`);
+        router.push(`loan/details`);
         break;
 
       default:

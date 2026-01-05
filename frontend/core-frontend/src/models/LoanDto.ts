@@ -4,6 +4,7 @@ import { TransactionHistory } from "./TransactionHistory";
 
 export interface LoanDto {
   number: string;
+  publicId:string,
   type:string
   principalAmount: number;
   outstandingPrincipalBalance: number;

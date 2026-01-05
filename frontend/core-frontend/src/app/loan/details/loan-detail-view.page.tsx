@@ -1,20 +1,20 @@
-// app/loan/[id]/LoanDetailView.tsx
-"use server";
+"use client"
 
-import styles from "../page.module.css";
+import styles from "./page.module.css";
 import { LoanDto } from "@/models/LoanDto";
 import { formatNumberWithCurrency } from "@/utils/numberFormatter";
-import { CustomInput } from "../components/CustomInput";
-import { LoanPaymentsTableView } from "../components/LoanPaymentsTableView/LoanPaymentsTableView";
+import { CustomInput } from "@/app/loan/components/loan-info-input"
 import { TransactionHistoryTableView } from "../components/TransactionHistoryTableView";
 import { DivisorLine } from "@/app/shared/DivisorLine";
-import DetailPanel from "../components/DetailPanel";
+import DetailPanel from "../components/loan-details-panel";
+import { LoanPaymentsTableView } from "../components/LoanPaymentsTableView/LoanPaymentsTableView";
+import { useLoan } from "../LoanContext";
 
-type Props = {
-  loan: LoanDto;
-};
 
-export default async function LoanDetailView({ loan }: Props) {
+export default function LoanDetailView() {
+  const loan:LoanDto = useLoan();
+
+
   return (
     <div className={styles.container}>
       <div className={styles.card}>
