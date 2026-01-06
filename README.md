@@ -39,7 +39,7 @@ Este proyecto me permitió:
 - Dominar el manejo de **transacciones financieras** en entornos críticos.  
 - Implementar **lógica de negocio bancaria** realista (intereses, mora, amortización).  
 - Practicar **persistencia eficiente** y optimización de consultas con JPA/Hibernate.  
-- Preparar la base para futuras integraciones con **Kafka** y **Keycloak** (seguridad y mensajería).
+
 
 ---
 
