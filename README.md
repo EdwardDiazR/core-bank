@@ -27,7 +27,7 @@ Incluye módulos clave como:
 | **Oracle Database** | Base de datos relacional |
 | **Lombok** | Reducción de boilerplate |
 | **Maven** | Gestión de dependencias y build |
-| **Docker (opcional)** | Contenedorización del entorno |
+
 
 ---
 
