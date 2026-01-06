@@ -16,7 +16,7 @@ public class loanInterestAccrualJob {
         _loanInterestService = loanInterestService;
     }
 
-    @Scheduled(cron = "0 0 0 * * *")
+    @Scheduled(cron = "0 10 2 * * *")
     private void addDailyInterestFactor() {
         try {
             //TODO: days to accrue  -
@@ -26,6 +26,7 @@ public class loanInterestAccrualJob {
             log.info("Started add accrued interest to interest balance");
             _loanInterestService.processLoanInterestAccrualBatch();
         } catch (Exception e) {
+            log.error(e.getMessage());
             log.error("Error at adding interest balance");
         }
     }

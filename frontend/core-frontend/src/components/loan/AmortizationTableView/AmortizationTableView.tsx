@@ -5,7 +5,7 @@ import axios from "axios";
 import React, { useState } from "react";
 import styles from "./page.module.css";
 import IframeModal from "./IframeModal";
-import { useLoan } from "../../LoanContext";
+import { useLoan } from "../../../app/loan/view/LoanContext";
 
 
 export const AmortizationTableView = () => {

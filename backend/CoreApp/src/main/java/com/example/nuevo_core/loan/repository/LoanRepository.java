@@ -41,7 +41,7 @@ public interface LoanRepository extends JpaRepository<Loan, Long> {
     @Query("""
             SELECT l
             FROM Loan l WHERE l.status IN
-            ('ACTIVE','DELINQUENT','RESTRUCTURED')
+            ('APPROVED','ACTIVE','DELINQUENT','RESTRUCTURED')
              AND l.outstandingPrincipalAmount > 0
             """)
     List<Loan> getLoansByStatusNormal();

@@ -3,11 +3,11 @@
 import styles from "./page.module.css";
 import { LoanDto } from "@/models/LoanDto";
 import { formatNumberWithCurrency } from "@/utils/numberFormatter";
-import { CustomInput } from "@/app/loan/components/loan-info-input"
-import { TransactionHistoryTableView } from "../components/TransactionHistoryTableView";
+import { CustomInput } from "@/components/loan/loan-info-input"
+import { TransactionHistoryTableView } from "../../../../components/loan/TransactionHistoryTableView";
 import { DivisorLine } from "@/app/shared/DivisorLine";
-import DetailPanel from "../components/loan-details-panel";
-import { LoanPaymentsTableView } from "../components/LoanPaymentsTableView/LoanPaymentsTableView";
+import DetailPanel from "../../../../components/loan/loan-details-panel";
+import { LoanPaymentsTableView } from "../../../../components/loan/LoanPaymentsTableView/LoanPaymentsTableView";
 import { useLoan } from "../LoanContext";
 
 

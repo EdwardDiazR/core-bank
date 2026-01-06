@@ -10,17 +10,17 @@ export default function NavBar() {
     router.push("/search-product");
   };
   return (
-    <nav className="bg-white border-b border-gray-200 px-4 py-2.5 sm:px-6 sticky top-0 z-50 shadow-sm">
-      <div className="max-w-7xl mx-auto flex flex-wrap justify-between items-center">
+    <nav className="bg-white border-b border-gray-200 py-2.5 sm:px-6 sticky top-0 z-50 shadow-sm">
+      <div className="w-full mx-auto flex flex-wrap items-center space-x-10">
         {/* Logotipo / Branding */}
-        {/* <div className="flex items-center">
-          <span className="self-center text-xl font-bold whitespace-nowrap text-blue-900 tracking-tight">
-            BANK<span className="text-blue-600">MODERN</span>
+        <div className="flex items-center">
+          <span className="self-center text-2xl font-semibold whitespace-nowrap text-blue-900 tracking-tight">
+            Core Bank Test
           </span>
-        </div> */}
+        </div>
 
         {/* Enlaces de Navegación */}
-        <div className="hidden md:flex items-center space-x-8">
+        <div className="hidden md:flex flex-1 items-center space-x-8">
           <ul className="flex flex-row space-x-8 font-medium text-sm">
             <li>
               <Link href="/" className="text-gray-600 hover:text-blue-700 transition-colors">
@@ -28,17 +28,14 @@ export default function NavBar() {
               </Link>
             </li>
             <li>
-              <a href="#" className="text-gray-600 hover:text-blue-700 transition-colors">
+              <Link href="/" className="text-gray-600 hover:text-blue-700 transition-colors">
                 Clientes
-              </a>
+              </Link>
             </li>
             <li>
-              <button
-                onClick={goToFinancialProductView}
-                className="text-gray-600 hover:text-blue-700 transition-colors focus:outline-none"
-              >
+              <Link href="/search-product" className="text-gray-600 hover:text-blue-700 transition-colors">
                 Producto financiero
-              </button>
+              </Link>
             </li>
           </ul>
         </div>

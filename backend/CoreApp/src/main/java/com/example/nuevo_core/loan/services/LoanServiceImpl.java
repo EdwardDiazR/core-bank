@@ -235,7 +235,7 @@ public class LoanServiceImpl implements ILoanService {
 
         Loan loan = Loan.builder()
                 .financialProduct(fp)
-                .status(LoanStatus.APPROVED)
+                .status(LoanStatus.ACTIVE)
                 .type(loanDto.type())
                 .currency(loanDto.currency())//In future can validate by loan type
                 .principalAmount(disbursementAmount)

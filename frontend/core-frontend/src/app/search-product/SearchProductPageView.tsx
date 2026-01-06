@@ -68,7 +68,7 @@ export default function SearchProductPageView() {
 
     switch (financialProduct.productType.toUpperCase()) {
       case "LOAN":
-        router.push(`loan/details`);
+        router.push(`loan/view/details`);
         break;
 
       default:
@@ -84,7 +84,7 @@ export default function SearchProductPageView() {
       <form className={styles.searchProductForm} onSubmit={onSearch}>
         <div className="flex flex-row gap-10">
           <div className="flex-row">
-            <label htmlFor="productNumber">No. cuenta financiera: </label>
+            <label htmlFor="productNumber">No. de producto: </label>
             <input
               id="productNumber"
               placeholder="Número de producto"

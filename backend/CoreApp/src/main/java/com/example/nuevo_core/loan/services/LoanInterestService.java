@@ -39,9 +39,15 @@ public class LoanInterestService implements ILoanInterestService {
     }
 
     public void addAccruedInterestToInterestBalance(Loan loan) {
+        long daysToAccrue;
         LocalDateTime lastInterestAccruedDate = loan.getLastInterestBalanceUpdateDate();
 
-        long daysToAccrue = ChronoUnit.DAYS.between(lastInterestAccruedDate, today.toLocalDate());
+
+        if (lastInterestAccruedDate == null) {
+            daysToAccrue = 1;
+        } else {
+            daysToAccrue = ChronoUnit.DAYS.between(lastInterestAccruedDate, today.toLocalDate());
+        }
 
         if (daysToAccrue > 0) {
 
@@ -60,7 +66,8 @@ public class LoanInterestService implements ILoanInterestService {
 
             loan.setInterestBalance(interestBalance.add(totalToAdd));
             loan.setLastInterestBalanceUpdateDate(today);
-            // loanRepository.save(loan);
+
+            loanRepository.save(loan);
         }
     }
 }

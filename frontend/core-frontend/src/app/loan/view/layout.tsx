@@ -1,7 +1,7 @@
 "use server"
 import React from "react";
 import { ClipboardList, FileTextIcon, Folder, ShieldCheck, Table } from "lucide-react";
-import { MenuItem } from "./components/MenuItem";
+import { MenuItem } from "../../../components/loan/MenuItem";
 import { LoanProvider } from "./LoanContext";
 import { cookies, headers } from "next/headers";
 import { loanService } from "@/services/loans/loanService";
@@ -31,11 +31,12 @@ const loanId = (await cookies()).get("selectedProductPublicId")?.value;
   const loan: LoanDto = response.data;
   // console.log(loan);
 
+  const BASE_PATH = "/loan/view"
 
 const MENU = [
   {
     label: "Detalle",
-    href: `/loan/details`,
+    href: `${BASE_PATH}/details`,
     tabIcon: "file",
   },
   {
@@ -52,7 +53,7 @@ const MENU = [
   
   {
     label: "Tabla de amortización",
-    href: `/loan/amortization`,
+    href: `${BASE_PATH}/amortization`,
     tabIcon: "table",
   },
   {
